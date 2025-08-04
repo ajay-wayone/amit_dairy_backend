@@ -1,0 +1,102 @@
+<table class="table table-bordered table-hover">
+    <thead class="table-light">
+        <tr>
+            <th width="5%">#</th>
+            <th width="15%">Image</th>
+            <th width="20%">Category</th>
+            <th width="10%">Status</th>
+            <th width="10%">Created_at</th>
+            <th width="15%">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($categories as $category)
+        <tr>
+            <td>{{ $loop->iteration }}</td>
+            <td>
+                @if($category->image)
+                    <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}" class="category-image">
+                @else
+                    <div class="category-image bg-light d-flex align-items-center justify-content-center">
+                        <i class="ri-image-line text-muted"></i>
+                    </div>
+                @endif
+            </td>
+            <td>
+                <strong>{{ $category->name }}</strong>
+                @if($category->sort_order > 0)
+                    <br><small class="text-muted">Order: {{ $category->sort_order }}</small>
+                @endif
+            </td>
+            <td>
+                @if($category->description)
+                    {{ Str::limit($category->description, 100) }}
+                @else
+                    <span class="text-muted">No description</span>
+                @endif
+            </td>
+            <td>
+                <span class="badge bg-info">{{ $category->subcategories_count ?? $category->subcategories->count() }}</span>
+            </td>
+            <td>
+                <span class="badge bg-primary">{{ $category->products_count ?? $category->products->count() }}</span>
+            </td>
+            <td>
+                <button type="button" 
+                        class="btn btn-sm toggle-status {{ $category->is_active ? 'btn-success' : 'btn-warning' }}" 
+                        data-id="{{ $category->id }}">
+                    @if($category->is_active)
+                        <i class="ri-check-line"></i> Active
+                    @else
+                        <i class="ri-close-line"></i> Inactive
+                    @endif
+                </button>
+            </td>
+            <td>
+                <div class="action-buttons">
+                    <a href="{{ route('admin.categories.show', $category) }}" 
+                       class="btn btn-info btn-sm" 
+                       title="View">
+                        <i class="ri-eye-line"></i>
+                    </a>
+                    <a href="{{ route('admin.categories.edit', $category) }}" 
+                       class="btn btn-warning btn-sm" 
+                       title="Edit">
+                        <i class="ri-edit-line"></i>
+                    </a>
+                    <button type="button" 
+                            class="btn btn-danger btn-sm delete-category" 
+                            data-id="{{ $category->id }}" 
+                            data-name="{{ $category->name }}"
+                            title="Delete">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+        @empty
+        <tr>
+            <td colspan="8" class="text-center py-4">
+                <div class="text-muted">
+                    <i class="ri-inbox-line fs-2"></i>
+                    <p class="mt-2">No categories found</p>
+                    <a href="{{ route('admin.categories.create') }}" class="btn btn-primary btn-sm">
+                        <i class="ri-add-line"></i> Add First Category
+                    </a>
+                </div>
+            </td>
+        </tr>
+        @endforelse
+    </tbody>
+</table>
+
+@if($categories->hasPages())
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div class="text-muted">
+        Showing {{ $categories->firstItem() }} to {{ $categories->lastItem() }} of {{ $categories->total() }} entries
+    </div>
+    <div class="pagination-container">
+        {{ $categories->appends(request()->query())->links() }}
+    </div>
+</div>
+@endif 
