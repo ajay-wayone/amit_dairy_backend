@@ -14,9 +14,8 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('slug')->unique();
-            $table->text('description')->nullable();
-            $table->string('image')->nullable();
+            $table->json('box_ids_json')->nullable(); // Remove ->unique()
+            $table->string('category_image')->nullable();
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
             $table->timestamps();

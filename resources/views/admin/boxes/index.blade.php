@@ -31,7 +31,7 @@
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>Sr.n</th>
                                     <th>Box Image</th>
                                     <th>Box Name</th>
                                     <th>Box Price</th>
@@ -41,33 +41,33 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($boxes as $box)
+                                @forelse($boxes as $key=> $box)
                                     <tr>
-                                        <td>{{ $box->id }}</td>
+                                        <td>{{ $box->$key + 1 }}</td>
                                         <td>
                                             @if ($box->box_image)
-                                                <img src="{{ asset('storage/' . $box->image) }}" alt="{{ $box->name }}"
-                                                    class="img-thumbnail" style="max-width: 100px; max-height: 60px;">
+                                                <img src="{{ asset('storage/' . $box->box_image) }}"
+                                                    alt="{{ $box->name }}" class="img-thumbnail"
+                                                    style="max-width: 100px; max-height: 60px;">
                                             @else
                                                 <span class="text-muted">No Image</span>
                                             @endif
                                         </td>
-                                        <td>{{ $box->name }}</td>
-                                        <td>{{ Str::limit($box->box_name, 100) }}</td>
-                                        <td>₹{{ number_format($box->box_price, 2) }}</td>
+                                        <td>{{ $box->box_name }}</td>
+                                        <td>{{ Str::limit($box->box_price, 100) }}</td>
                                         <td>
                                             <span class="badge bg-{{ $box->is_active ? 'success' : 'danger' }}">
-                                                {{ $box->is_active ? 'Active' : 'Inactive' }}
+                                                {{ $box->is_active ? 'Active' : 'inctive' }}
                                             </span>
                                         </td>
                                         <td>{{ $box->created_at->format('M d, Y') }}</td>
                                         <td>
                                             <div class="btn-group" role="group">
                                                 <a href="{{ route('admin.boxes.edit', $box->id) }}"
-                                                    class="btn btn-sm btn-warning">
+                                                    class="btn btn-sm btn-warning me-2">
                                                     <i class="ri-edit-line"></i>
                                                 </a>
-                                                <button type="button" class="btn btn-sm btn-danger delete-item"
+                                                <button type="button" class="btn btn-sm btn-danger delete-item "
                                                     data-id="{{ $box->id }}" data-name="{{ $box->name }}"
                                                     data-type="box"
                                                     data-url="{{ route('admin.boxes.destroy', $box->id) }}">

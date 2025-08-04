@@ -1,6 +1,6 @@
-@forelse($customers as $customer)
+@forelse($customers as $key=> $customer)
     <tr>
-        <td>{{ $customer->id }}</td>
+        <td>{{ $customer->$key + 1 }}</td>
 
         <td>
             <a href="{{ route('admin.customers.show', $customer->id) }}" class="text-info" title="View">

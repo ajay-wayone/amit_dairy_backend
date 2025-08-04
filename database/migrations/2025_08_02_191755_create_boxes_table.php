@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('boxes', function (Blueprint $table) {
-            $table->id();
-            $table->string('box_name');
-            $table->string('box_image');
-            $table->decimal('box_price', 10, 2);
-            $table->boolean('is_active')->default(true);
-            
-            $table->timestamps();
-        });
+       // database/migrations/xxxx_xx_xx_create_boxes_table.php
+
+Schema::create('boxes', function (Blueprint $table) {
+    $table->id();
+    $table->string('box_name');
+    $table->string('box_image');
+    $table->decimal('box_price', 10, 2);
+    $table->boolean('is_active')->default(false);
+    $table->timestamps();
+});
     }
 
     /**

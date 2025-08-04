@@ -6,13 +6,13 @@
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0">Add New box</h4>
+                <h4 class="mb-sm-0">Edit box</h4>
 
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('admin.boxes.index') }}">boxes</a></li>
-                        <li class="breadcrumb-item active">Add box</li>
+                        <li class="breadcrumb-item active">Edit box</li>
                     </ol>
                 </div>
             </div>
@@ -23,12 +23,12 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">box Information</h4>
+                    <h4 class="card-title"> Edit box Information</h4>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('admin.boxes.store') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('admin.boxes.update', $box->id) }}" method="POST" enctype="multipart/form-data">
                         @csrf
-
+                        @method('PUT')
                         <div class="row">
                             <!-- Left Side -->
                             <div class="col-md-8">
@@ -37,7 +37,7 @@
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('box_name') is-invalid @enderror"
                                         id="box_name" name="box_name" placeholder="Enter the box name"
-                                        value="{{ old('box_name') }}" required>
+                                        value="{{ old('box_name', $box->box_name) }}">
                                     @error('box_name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -48,7 +48,7 @@
                                             class="text-danger">*</span></label>
                                     <input type="number" class="form-control @error('box_price') is-invalid @enderror"
                                         id="box_price" name="box_price" placeholder="Enter the box price"
-                                        value="{{ old('box_price') }}" required>
+                                        value="{{ old('box_price', $box->box_price) }}">
                                     @error('box_price')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -57,7 +57,7 @@
                                 <div class="mb-3">
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
-                                            {{ old('is_active') ? 'checked' : '' }}>
+                                            {{ old('is_active', $box->is_active) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="is_active">Active</label>
                                     </div>
                                 </div>
@@ -69,18 +69,22 @@
                                     <label for="box_image" class="form-label">Box Image <span
                                             class="text-danger">*</span></label>
                                     <input type="file" class="form-control @error('box_image') is-invalid @enderror"
-                                        id="box_image" name="box_image" accept="image/*" required>
+                                        id="box_image" name="box_image" accept="image/*">
                                     @error('box_image')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
 
-                                <div class="mb-3 d-none" id="imagePreview">
-                                    <img id="previewImg" src="#" alt="Preview" class="img-fluid rounded"
-                                        style="max-height: 200px;">
-                                </div>
+                                @if ($box->box_image)
+                                    <div class="mb-3" id="imagePreview">
+
+                                        <img src="{{ asset('storage/' . $box->box_image) }}" alt="{{ $box->name }}"
+                                            class="img-thumbnail" style="max-height: 200px;">
+                                    </div>
+                                @endif
                             </div>
                         </div>
+                        <input type="hidden" name="is_active" value="0">
 
                         <!-- Submit & Cancel Buttons -->
                         <div class="row">
@@ -89,11 +93,12 @@
                                     <i class="ri-arrow-left-line me-1"></i> Cancel
                                 </a>
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="ri-save-line me-1"></i> Save Box
+                                    <i class="ri-save-line me-1"></i> Update
                                 </button>
                             </div>
                         </div>
                     </form>
+
 
                 </div>
             </div>
@@ -145,26 +150,11 @@
                 const name = $('#box_name').val().trim();
                 const image = $('#box_image').val();
 
-                if (!name) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Validation Error',
-                        text: 'box name is required!'
-                    });
-                    return false;
-                }
 
-                if (!image) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Validation Error',
-                        text: 'box image is required!'
-                    });
-                    return false;
-                }
 
                 return true;
             });
+
         });
     </script>
 @endpush

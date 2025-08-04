@@ -42,9 +42,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($testimonials as $testimonial)
+                                @forelse($testimonials as $key => $testimonial)
                                     <tr>
-                                        <td>{{ $testimonial->id }}</td>
+                                        <td>{{ $testimonial->$key + 1 }}</td>
                                         <td>
                                             @if ($testimonial->customer_image)
                                                 <img src="{{ asset('storage/' . $testimonial->customer_image) }}"

@@ -28,9 +28,9 @@
                         <table class="table table-bordered table-striped table-sm">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="text-nowrap">ID</th>
+                                    <th class="text-nowrap">Sr.n</th>
                                     <th class="text-nowrap">Name</th>
-                                    
+
                                     <th class="text-nowrap">Email</th>
                                     <th class="text-nowrap">Phone</th>
                                     <th class="text-nowrap">Status</th>
