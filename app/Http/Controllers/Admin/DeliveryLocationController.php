@@ -22,9 +22,8 @@ class DeliveryLocationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'address' => 'required|string',
-            'phone' => 'nullable|string|max:20',
+            'location' => 'required|string',
+            'pincode' => 'nullable|string|max:20',
             'is_active' => 'required|boolean',
         ]);
 
@@ -47,9 +46,8 @@ class DeliveryLocationController extends Controller
     public function update(Request $request, DeliveryLocation $deliveryLocation)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'address' => 'required|string',
-            'phone' => 'nullable|string|max:20',
+            'location' => 'required|string',
+            'pincode' => 'nullable|string|max:20',
             'is_active' => 'required|boolean',
         ]);
 

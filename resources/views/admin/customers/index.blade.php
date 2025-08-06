@@ -60,16 +60,12 @@
                     const query = $(this).val();
                     clearTimeout(searchTimeout);
 
-                    // If search is empty, show all customers
                     if (query.length === 0) {
                         loadCustomers('');
                         return;
                     }
 
-                    // If search is too short, don't search yet
-                    if (query.length < 2) {
-                        return;
-                    }
+                    if (query.length < 2) return;
 
                     searchTimeout = setTimeout(function() {
                         loadCustomers(query);
@@ -87,28 +83,15 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         },
                         success: function(response) {
-                            if (response.table) {
-                                // AJAX response with partial views
-                                $('#customersTableBody').html(response.table);
-                                $('.pagination-container').html(response.pagination || '');
-                            } else {
-                                // Full page response
-                                const tempDiv = $('<div>').html(response);
-                                const newTableBody = tempDiv.find('#customersTableBody').html();
-                                const newPagination = tempDiv.find('.pagination-container').html();
+                            updateTable(response);
 
-                                $('#customersTableBody').html(newTableBody);
-                                $('.pagination-container').html(newPagination || '');
-                            }
-
-                            // Update URL without page reload
                             const url = new URL(window.location);
                             if (query) {
                                 url.searchParams.set('search', query);
                             } else {
                                 url.searchParams.delete('search');
                             }
-                            url.searchParams.delete('page'); // Reset to first page
+                            url.searchParams.delete('page');
                             window.history.pushState({}, '', url);
                         },
                         error: function() {
@@ -117,7 +100,7 @@
                     });
                 }
 
-                // Handle pagination clicks without page reload
+                // Handle pagination click
                 $(document).on('click', '.pagination a', function(e) {
                     e.preventDefault();
                     const href = $(this).attr('href');
@@ -136,30 +119,42 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         },
                         success: function(response) {
-                            if (response.table) {
-                                // AJAX response with partial views
-                                $('#customersTableBody').html(response.table);
-                                $('.pagination-container').html(response.pagination || '');
-                            } else {
-                                // Full page response
-                                const tempDiv = $('<div>').html(response);
-                                const newTableBody = tempDiv.find('#customersTableBody').html();
-                                const newPagination = tempDiv.find('.pagination-container').html();
+                            updateTable(response);
 
-                                $('#customersTableBody').html(newTableBody);
-                                $('.pagination-container').html(newPagination || '');
-                            }
+                            // ✅ Update active class manually
+                            $('.pagination li').removeClass('active');
+                            $('.pagination a').each(function() {
+                                const pageUrl = new URL($(this).attr('href'), window
+                                    .location.origin);
+                                if (pageUrl.searchParams.get('page') == page) {
+                                    $(this).closest('li').addClass('active');
+                                }
+                            });
 
-                            // Update URL
                             window.history.pushState({}, '', href);
 
-                            // Scroll to top of table
+                            // Optional scroll
                             $('html, body').animate({
                                 scrollTop: $('.table-responsive').offset().top - 100
                             }, 300);
                         }
                     });
                 });
+
+                // Reusable function to update content
+                function updateTable(response) {
+                    if (response.table) {
+                        $('#customersTableBody').html(response.table);
+                        $('.pagination-container').html(response.pagination || '');
+                    } else {
+                        const tempDiv = $('<div>').html(response);
+                        const newTableBody = tempDiv.find('#customersTableBody').html();
+                        const newPagination = tempDiv.find('.pagination-container').html();
+
+                        $('#customersTableBody').html(newTableBody);
+                        $('.pagination-container').html(newPagination || '');
+                    }
+                }
             });
         </script>
     @endpush

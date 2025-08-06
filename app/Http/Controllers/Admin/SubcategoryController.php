@@ -7,38 +7,51 @@ use App\Models\Subcategory;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+
 
 class SubcategoryController extends Controller
 {
-    public function index()
-    {
-        $subcategories = Subcategory::with('category')->orderBy('sort_order')->paginate(10);
-        return view('admin.subcategories.index', compact('subcategories'));
+    public function index(Request $request)
+{
+    $query = Subcategory::query();
+
+    if ($request->has('search') && $request->search != '') {
+        $search = $request->search;
+        $query->where('subcategory_name', 'like', '%' . $search . '%');
     }
 
-    public function create()
-    {
-        $categories = Category::where('is_active', true)->get();
-        return view('admin.subcategories.create', compact('categories'));
-    }
+    $subcategories = $query->orderBy('id', 'desc')->paginate(15);
+
+    return view('admin.subcategories.index', compact('subcategories'));
+}
+
+
+   public function create()
+{
+    $categories = Category::where('is_active', true)->get();
+    return view('admin.subcategories.create', compact('categories'));
+}
+
 
     public function store(Request $request)
     {
+          
+
         $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer',
-        ]);
+        'category_id' => 'required|exists:categories,id',
+        'subcategory_name' => 'required|string|max:255',
+        'subcategory_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:20248',
+        'is_active' => 'required|boolean',
+        'sort_order' => 'nullable|integer',
+    ]);
 
         $data = $request->all();
         $data['slug'] = Str::slug($request->name);
         $data['is_active'] = $request->has('is_active');
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('subcategories', 'public');
+        if ($request->hasFile('subcategory_image')) {
+            $data['subcategory_image'] = $request->file('subcategory_image')->store('subcategories', 'public');
         }
 
         Subcategory::create($data);
@@ -55,49 +68,52 @@ class SubcategoryController extends Controller
     public function edit(Subcategory $subcategory)
     {
         $categories = Category::where('is_active', true)->get();
-        return view('admin.subcategories.edit', compact('subcategory', 'categories'));
+        return view('admin.subcategories.update', compact('subcategory', 'categories'));
     }
 
-    public function update(Request $request, Subcategory $subcategory)
-    {
-        $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer',
-        ]);
+   public function update(Request $request, Subcategory $subcategory)
+{
+    $request->validate([
+        'category_id' => 'exists:categories,id',
+        'subcategory_name' => 'required|string|max:255',
+        'subcategory_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20248',
+        'is_active' => 'boolean',
+        'sort_order' => 'nullable|integer',
+    ]);
 
-        $data = $request->all();
-        $data['slug'] = Str::slug($request->name);
-        $data['is_active'] = $request->has('is_active');
+    $data = $request->only(['category_id', 'subcategory_name', 'sort_order']);
+    $data['slug'] = Str::slug($request->subcategory_name);
+    $data['is_active'] = $request->has('is_active');
 
-        if ($request->hasFile('image')) {
-            // Delete old image
-            if ($subcategory->image) {
-                \Storage::disk('public')->delete($subcategory->image);
-            }
-            $data['image'] = $request->file('image')->store('subcategories', 'public');
+    // Handle image upload
+    if ($request->hasFile('subcategory_image')) {
+        // Delete old image
+        if ($subcategory->subcategory_image && Storage::disk('public')->exists($subcategory->subcategory_image)) {
+            Storage::disk('public')->delete($subcategory->subcategory_image);
         }
 
-        $subcategory->update($data);
-
-        return redirect()->route('admin.subcategories.index')
-            ->with('success', 'Subcategory updated successfully.');
+        // Upload new image
+        $data['subcategory_image'] = $request->file('subcategory_image')->store('subcategories', 'public');
     }
 
-    public function destroy(Subcategory $subcategory)
-    {
-        if ($subcategory->image) {
-            \Storage::disk('public')->delete($subcategory->image);
-        }
-        
-        $subcategory->delete();
+    $subcategory->update($data);
 
-        return redirect()->route('admin.subcategories.index')
-            ->with('success', 'Subcategory deleted successfully.');
+    return redirect()->route('admin.subcategories.index')
+        ->with('success', 'Subcategory updated successfully.');
+}
+   public function destroy(Subcategory $subcategory)
+{
+    // Delete image from storage if exists
+    if ($subcategory->subcategory_image && \Storage::disk('public')->exists($subcategory->subcategory_image)) {
+        \Storage::disk('public')->delete($subcategory->subcategory_image);
     }
+
+    // Delete subcategory record from DB
+    $subcategory->delete();
+
+    return redirect()->route('admin.subcategories.index')
+        ->with('success', 'Subcategory deleted successfully.');
+}
 
     public function toggleStatus(Subcategory $subcategory)
     {

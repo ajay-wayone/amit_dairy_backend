@@ -15,27 +15,25 @@ class Product extends Model
         'name',
         'slug',
         'description',
-        'short_description',
-        'price',
-        'sale_price',
-        'stock_quantity',
-        'sku',
-        'image',
-        'gallery_images',
-        'is_featured',
-        'is_active',
-        'sort_order',
-        'weight',
+        'quantity',
         'unit',
+        'types',
+        'price',
+        'discounted_price',
+        'minimum_quantity',
+        'max_order',
+        'featured_type',
+        'image',
+        'is_active'
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
-        'sale_price' => 'decimal:2',
-        'gallery_images' => 'array',
-        'is_featured' => 'boolean',
+        'discounted_price' => 'decimal:2',
+        'quantity' => 'decimal:2',
+        'minimum_quantity' => 'decimal:2',
+        'types' => 'array',
         'is_active' => 'boolean',
-        'weight' => 'decimal:2',
     ];
 
     public function category()

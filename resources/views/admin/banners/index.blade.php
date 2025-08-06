@@ -1,13 +1,16 @@
 @extends('admin.layouts.app')
 
+@php
+    $selectedPage = $selectedPage ?? null;
+    $currentImage = $currentImage ?? null;
+@endphp
+
 @section('title', 'Manage Banner')
 
 @section('content')
     <div class="row">
         @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
         @elseif(session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
 
         <div class="col-xxl-12">
@@ -17,32 +20,34 @@
                 </div>
 
                 <div class="card-body">
-                    <form method="POST" action="{{ route('admin.banners.store') }}" enctype="multipart/form-data">
-                        @csrf
-                        <input type="hidden" name="submit_banner" value="1">
 
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label for="pageSelect" class="form-label">Select Page</label>
-                                <select name="page_name" id="pageSelect" class="form-select" onchange="this.form.submit()"
-                                    required>
-                                    <option value="">-- Select Page --</option>
-                                    <option value="home"
-                                        {{ old('page_name', $selectedPage) == 'home' ? 'selected' : '' }}>Home</option>
-                                    <option value="about"
-                                        {{ old('page_name', $selectedPage) == 'about' ? 'selected' : '' }}>About</option>
-                                    <option value="product"
-                                        {{ old('page_name', $selectedPage) == 'product' ? 'selected' : '' }}>Products
-                                    </option>
-                                    <option value="contact"
-                                        {{ old('page_name', $selectedPage) == 'contact' ? 'selected' : '' }}>Contact
-                                    </option>
-                                    <!-- Add more if needed -->
-                                </select>
-                            </div>
+                    <!-- PAGE SELECTION FORM -->
+                    <form method="GET" action="{{ route('admin.banners.create') }}">
+                        <div class="mb-3">
+                            <label for="pageSelect" class="form-label">Select Page</label>
+                            <select name="page_name" id="pageSelect" class="form-select" onchange="this.form.submit()"
+                                required>
+                                <option value="">-- Select Page --</option>
+                                <option value="home" {{ request('page_name') == 'home' ? 'selected' : '' }}>Home</option>
+                                <option value="about" {{ request('page_name') == 'about' ? 'selected' : '' }}>About
+                                </option>
+                                <option value="product" {{ request('page_name') == 'product' ? 'selected' : '' }}>Products
+                                </option>
+                                <option value="contact" {{ request('page_name') == 'contact' ? 'selected' : '' }}>Contact
+                                </option>
+                            </select>
+                        </div>
+                    </form>
 
-                            @if (!empty($selectedPage))
-                                @if (!empty($currentImage))
+                    <!-- IMAGE UPLOAD FORM: SHOWN ONLY IF PAGE IS SELECTED -->
+                    @if ($selectedPage)
+                        <form method="POST" action="{{ route('admin.banners.store') }}" enctype="multipart/form-data">
+                            @csrf
+                            <input type="hidden" name="submit_banner" value="1">
+                            <input type="hidden" name="page_name" value="{{ $selectedPage }}">
+
+                            <div class="row">
+                                @if ($currentImage)
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Current Banner</label><br>
                                         <img src="{{ asset($currentImage) }}" alt="Current Banner"
@@ -52,7 +57,7 @@
 
                                 <div class="col-md-6 mb-3">
                                     <label for="imageInput" class="form-label">
-                                        {{ $currentImage ? 'Insert Banner Image Size (1440 X 650)' : 'Upload Banner Image' }}
+                                        {{ $currentImage ? 'Update Banner Image (1440x650)' : 'Upload Banner Image' }}
                                     </label>
                                     <input type="file" name="image" class="form-control" id="imageInput"
                                         accept="image/*" {{ $currentImage ? '' : 'required' }}>
@@ -65,9 +70,10 @@
                                     <button type="submit" class="btn btn-primary">{{ $currentImage ? 'Update' : 'Add' }}
                                         Banner</button>
                                 </div>
-                            @endif
-                        </div>
-                    </form>
+                            </div>
+                        </form>
+                    @endif
+
                 </div>
             </div>
         </div>

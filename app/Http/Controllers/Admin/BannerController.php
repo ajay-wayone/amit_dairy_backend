@@ -17,8 +17,9 @@ class BannerController extends Controller
     }
 public function create(Request $request)
 {
-    $selectedPage = $request->input('page_name'); // Get selected page from form
-    $currentImage = null;
+    $selectedPage = $request->input('page_name');
+    $banner = null;
+    $currentImage = null; // ✅ Default value set
 
     if ($selectedPage) {
         $banner = Banner::where('page_name', $selectedPage)->first();
@@ -27,15 +28,16 @@ public function create(Request $request)
         }
     }
 
-    return view('admin.banners.create', compact('selectedPage', 'currentImage'));
+    return view('admin.banners.create', compact('selectedPage', 'currentImage', 'banner'));
 }
+
 
 public function store(Request $request)
 {
     if ($request->has('submit_banner')) {
         $request->validate([
             'page_name' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:20248',
         ]);
 
         $selectedPage = $request->input('page_name');
@@ -71,58 +73,60 @@ public function store(Request $request)
         }
     }
 
-    return view('admin.banners.create', compact('selectedPage', 'currentImage'));
+return view('admin.banners.create', compact('selectedPage', 'currentImage', 'banner'));
 }
 
 
 
-    // // Show edit form for banner (optional if using only per-page form)
-    // public function edit(Banner $banner)
-    // {
-    //     return view('admin.banners.edit', compact('banner'));
-    // }
+    // Show edit form for banner (optional if using only per-page form)
+    public function edit($id)
+{
+    $currentImage = Banner::findOrFail($id);
+    return view('admin.banners.create', compact('currentImage'));
+}
 
-    // // Update banner (if using individual banner edit page)
-    // public function update(Request $request, Banner $banner)
-    // {
-    //     $request->validate([
-    //         'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:2048',
-    //     ]);
 
-    //     if ($request->hasFile('image')) {
-    //         if ($banner->image) {
-    //             Storage::disk('public')->delete($banner->image);
-    //         }
+    // Update banner (if using individual banner edit page)
+    public function update(Request $request, Banner $banner)
+    {
+        $request->validate([
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp,gif|max:20248',
+        ]);
 
-    //         $banner->image = $request->file('image')->store('banners', 'public');
-    //     }
+        if ($request->hasFile('image')) {
+            if ($banner->image) {
+                Storage::disk('public')->delete($banner->image);
+            }
 
-    //     $banner->save();
+            $banner->image = $request->file('image')->store('banners', 'public');
+        }
 
-    //     return redirect()->route('admin.banners.index')->with('success', 'Banner updated successfully.');
-    // }
+        $banner->save();
 
-    // // Delete a banner
-    // public function destroy(Banner $banner)
-    // {
-    //     if ($banner->image) {
-    //         Storage::disk('public')->delete($banner->image);
-    //     }
+        return redirect()->route('admin.banners.index')->with('success', 'Banner updated successfully.');
+    }
 
-    //     $banner->delete();
+    // Delete a banner
+    public function destroy(Banner $banner)
+    {
+        if ($banner->image) {
+            Storage::disk('public')->delete($banner->image);
+        }
 
-    //     return redirect()->route('admin.banners.index')->with('success', 'Banner deleted successfully.');
-    // }
+        $banner->delete();
 
-    // // Toggle banner status via AJAX (optional)
-    // public function toggleStatus(Banner $banner)
-    // {
-    //     $banner->update(['is_active' => !$banner->is_active]);
+        return redirect()->route('admin.banners.index')->with('success', 'Banner deleted successfully.');
+    }
 
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Banner status updated.',
-    //         'is_active' => $banner->is_active,
-    //     ]);
-    // }
+    // Toggle banner status via AJAX (optional)
+    public function toggleStatus(Banner $banner)
+    {
+        $banner->update(['is_active' => !$banner->is_active]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Banner status updated.',
+            'is_active' => $banner->is_active,
+        ]);
+    }
 }

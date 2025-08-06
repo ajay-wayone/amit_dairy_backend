@@ -11,7 +11,7 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = [
-        'box_category',
+        'name',
         'box_ids_json',
         'category_image',
         'is_active',
@@ -26,7 +26,7 @@ class Category extends Model
 
     protected $appends = ['image_url'];
 
-    // Relationships
+    // ✅ Relationships
     public function subcategories()
     {
         return $this->hasMany(Subcategory::class);
@@ -37,12 +37,13 @@ class Category extends Model
         return $this->hasMany(Product::class);
     }
 
+    // ✅ Many-to-many relationship with box
     public function boxes()
     {
-        return $this->belongsToMany(Box::class);
+        return $this->belongsToMany(Box::class, 'category_box'); // <- correct pivot table name
     }
 
-    // Accessors
+    // ✅ Accessors
     public function getImageUrlAttribute()
     {
         return $this->category_image 
@@ -55,7 +56,7 @@ class Category extends Model
         return $this->box_ids_json ?? [];
     }
 
-    // Scopes
+    // ✅ Scopes
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
@@ -66,7 +67,7 @@ class Category extends Model
         return $query->orderBy('sort_order')->orderBy('name');
     }
 
-    // Business Logic
+    // ✅ Business Logic
     public function syncBoxes(array $boxIds)
     {
         $this->update(['box_ids_json' => $boxIds]);
@@ -76,17 +77,14 @@ class Category extends Model
 
     public function deleteWithCleanup()
     {
-        // Check for dependencies
         if ($this->subcategories()->exists() || $this->products()->exists()) {
             return false;
         }
 
-        // Delete image file
         if ($this->category_image) {
             Storage::disk('public')->delete($this->category_image);
         }
 
-        // Detach boxes
         $this->boxes()->detach();
 
         return $this->delete();

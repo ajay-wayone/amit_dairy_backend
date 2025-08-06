@@ -61,7 +61,7 @@
         }
 
         .app-menu .nav-link {
-            font-size: .9rem !important;
+            font-size: 0.9rem !important;
             padding: 0.5rem 1rem !important;
         }
 
@@ -474,7 +474,7 @@
                         <div class="col-sm-6">
                             <script>
                                 document.write(new Date().getFullYear())
-                            </script>  Amit Dairy & Sweets.
+                            </script> Amit Dairy & Sweets.
                         </div>
                         <div class="col-sm-6">
                             <div class="text-sm-end d-none d-sm-block">
@@ -499,6 +499,39 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ asset('assets/js/admin-delete.js') }}"></script>
+
+    <!-- Sidebar Toggle Fix -->
+    <script>
+        $(document).ready(function() {
+            // Mobile sidebar toggle
+            $('#topnav-hamburger-icon').on('click', function() {
+                $('body').toggleClass('sidebar-enable');
+                if ($(window).width() >= 992) {
+                    $('body').toggleClass('vertical-collpsed');
+                } else {
+                    $('body').removeClass('vertical-collpsed');
+                }
+            });
+
+            // Close sidebar on mobile when clicking outside
+            $(document).on('click', function(e) {
+                if ($(window).width() < 992) {
+                    if (!$(e.target).closest('.app-menu, #topnav-hamburger-icon').length) {
+                        $('body').removeClass('sidebar-enable');
+                    }
+                }
+            });
+
+            // Submenu toggle for mobile
+            $('.menu-link[data-bs-toggle="collapse"]').on('click', function(e) {
+                if ($(window).width() < 992) {
+                    e.preventDefault();
+                    const target = $($(this).attr('href'));
+                    target.collapse('toggle');
+                }
+            });
+        });
+    </script>
 
     <!-- Notification System -->
     <script>

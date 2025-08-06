@@ -21,8 +21,7 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+                  ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -51,8 +50,9 @@ class ProductController extends Controller
 
     public function create()
     {
-        $categories = Category::active()->ordered()->get();
+        $categories = Category::with('subcategories')->active()->ordered()->get();
         $subcategories = collect();
+       
         
         if (request()->has('category_id')) {
             $subcategories = Subcategory::where('category_id', request('category_id'))
@@ -69,37 +69,27 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
-            'subcategory_id' => 'nullable|exists:subcategories,id',
+            'subcategory_id' => 'required|exists:subcategories,id',
             'description' => 'nullable|string',
-            'short_description' => 'nullable|string|max:255',
+            'quantity' => 'nullable|numeric|min:0',
+            'unit' => 'nullable|string|in:gram,kilogram,unit',
+            'type' => 'nullable|array',
+            'type.*' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0|lt:price',
-            'stock_quantity' => 'required|integer|min:0',
-            'sku' => 'required|string|max:100|unique:products,sku',
-            'product_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'gallery_images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'is_featured' => 'boolean',
-            'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer|min:0',
-            'weight' => 'nullable|numeric|min:0',
-            'unit' => 'nullable|string|max:50'
+            'discounted_price' => 'nullable|numeric|min:0|lt:price',
+            'minimum_quantity' => 'nullable|numeric|min:0',
+            'max_order' => 'nullable|numeric|min:1',
+            'featured_type' => 'nullable|string|in:hot,new_arrival,featured',
+            'products_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'is_active' => 'boolean'
         ]);
 
         try {
             $imagePath = null;
-            if ($request->hasFile('product_image')) {
-                $image = $request->file('product_image');
+            if ($request->hasFile('products_image')) {
+                $image = $request->file('products_image');
                 $imageName = 'prod_' . uniqid() . '.' . $image->getClientOriginalExtension();
                 $imagePath = $image->storeAs('products', $imageName, 'public');
-            }
-
-            $galleryImages = [];
-            if ($request->hasFile('gallery_images')) {
-                foreach ($request->file('gallery_images') as $galleryImage) {
-                    $galleryName = 'gallery_' . uniqid() . '.' . $galleryImage->getClientOriginalExtension();
-                    $galleryPath = $galleryImage->storeAs('products/gallery', $galleryName, 'public');
-                    $galleryImages[] = $galleryPath;
-                }
             }
 
             $product = Product::create([
@@ -108,18 +98,16 @@ class ProductController extends Controller
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'description' => $request->description,
-                'short_description' => $request->short_description,
+                'quantity' => $request->quantity,
+                'unit' => $request->unit,
+                'types' => $request->type,
                 'price' => $request->price,
-                'sale_price' => $request->sale_price,
-                'stock_quantity' => $request->stock_quantity,
-                'sku' => $request->sku,
+                'discounted_price' => $request->discounted_price,
+                'minimum_quantity' => $request->minimum_quantity,
+                'max_order' => $request->max_order,
+                'featured_type' => $request->featured_type,
                 'image' => $imagePath,
-                'gallery_images' => $galleryImages,
-                'is_featured' => $request->has('is_featured'),
-                'is_active' => $request->has('is_active'),
-                'sort_order' => $request->sort_order ?? 0,
-                'weight' => $request->weight,
-                'unit' => $request->unit
+                'is_active' => $request->has('is_active')
             ]);
 
             return redirect()->route('admin.products.index')
@@ -132,7 +120,7 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        $product->load(['category', 'subcategory', 'orderItems']);
+        $product->load(['category', 'subcategory']);
         return view('admin.products.show', compact('product'));
     }
 
@@ -152,20 +140,19 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
-            'subcategory_id' => 'nullable|exists:subcategories,id',
+            'subcategory_id' => 'required|exists:subcategories,id',
             'description' => 'nullable|string',
-            'short_description' => 'nullable|string|max:255',
+            'quantity' => 'nullable|numeric|min:0',
+            'unit' => 'nullable|string|in:gram,kilogram,unit',
+            'type' => 'nullable|array',
+            'type.*' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0|lt:price',
-            'stock_quantity' => 'required|integer|min:0',
-            'sku' => 'required|string|max:100|unique:products,sku,' . $product->id,
-            'product_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'gallery_images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'is_featured' => 'boolean',
-            'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer|min:0',
-            'weight' => 'nullable|numeric|min:0',
-            'unit' => 'nullable|string|max:50'
+            'discounted_price' => 'nullable|numeric|min:0|lt:price',
+            'minimum_quantity' => 'nullable|numeric|min:0',
+            'max_order' => 'nullable|numeric|min:1',
+            'featured_type' => 'nullable|string|in:hot,new_arrival,featured',
+            'products_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'is_active' => 'boolean'
         ]);
 
         try {
@@ -175,44 +162,26 @@ class ProductController extends Controller
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'description' => $request->description,
-                'short_description' => $request->short_description,
+                'quantity' => $request->quantity,
+                'unit' => $request->unit,
+                'types' => $request->type,
                 'price' => $request->price,
-                'sale_price' => $request->sale_price,
-                'stock_quantity' => $request->stock_quantity,
-                'sku' => $request->sku,
-                'is_featured' => $request->has('is_featured'),
-                'is_active' => $request->has('is_active'),
-                'sort_order' => $request->sort_order ?? 0,
-                'weight' => $request->weight,
-                'unit' => $request->unit
+                'discounted_price' => $request->discounted_price,
+                'minimum_quantity' => $request->minimum_quantity,
+                'max_order' => $request->max_order,
+                'featured_type' => $request->featured_type,
+                'is_active' => $request->has('is_active')
             ];
 
-            if ($request->hasFile('product_image')) {
+            if ($request->hasFile('products_image')) {
                 // Delete old image
                 if ($product->image) {
                     Storage::disk('public')->delete($product->image);
                 }
 
-                $image = $request->file('product_image');
+                $image = $request->file('products_image');
                 $imageName = 'prod_' . uniqid() . '.' . $image->getClientOriginalExtension();
                 $data['image'] = $image->storeAs('products', $imageName, 'public');
-            }
-
-            if ($request->hasFile('gallery_images')) {
-                // Delete old gallery images
-                if ($product->gallery_images) {
-                    foreach ($product->gallery_images as $oldImage) {
-                        Storage::disk('public')->delete($oldImage);
-                    }
-                }
-
-                $galleryImages = [];
-                foreach ($request->file('gallery_images') as $galleryImage) {
-                    $galleryName = 'gallery_' . uniqid() . '.' . $galleryImage->getClientOriginalExtension();
-                    $galleryPath = $galleryImage->storeAs('products/gallery', $galleryName, 'public');
-                    $galleryImages[] = $galleryPath;
-                }
-                $data['gallery_images'] = $galleryImages;
             }
 
             $product->update($data);
@@ -233,15 +202,9 @@ class ProductController extends Controller
                 return back()->with('error', 'Cannot delete product with existing orders!');
             }
 
-            // Delete images
+            // Delete image
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
-            }
-
-            if ($product->gallery_images) {
-                foreach ($product->gallery_images as $galleryImage) {
-                    Storage::disk('public')->delete($galleryImage);
-                }
             }
 
             $product->delete();
@@ -271,31 +234,16 @@ class ProductController extends Controller
         }
     }
 
-    public function toggleFeatured(Product $product)
-    {
-        try {
-            $product->update(['is_featured' => !$product->is_featured]);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Product featured status updated successfully!',
-                'is_featured' => $product->is_featured
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update product featured status!'
-            ], 500);
-        }
-    }
+public function getSubcategories(Request $request)
+{
+    $categoryId = $request->category_id;
 
-    public function getSubcategories(Request $request)
-    {
-        $subcategories = Subcategory::where('category_id', $request->category_id)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+    $subcategories = Subcategory::where('category_id', $categoryId)
+        ->where('is_active', true)
+        ->orderBy('subcategory_name')
+        ->get();
+    return response()->json($subcategories);
+}
 
-        return response()->json($subcategories);
-    }
+
 }

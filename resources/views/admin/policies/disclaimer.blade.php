@@ -17,7 +17,7 @@
                         <div class="mb-3">
                             <label for="content" class="form-label small">Disclaimer Content</label>
                             <textarea name="content" id="content" class="form-control form-control-sm" rows="10"
-                                placeholder="Enter disclaimer content...">{{ old('content', $disclaimer ?? '') }}</textarea>
+                                placeholder="Enter disclaimer content...">{{ old('content', $content ?? '') }}</textarea>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2">

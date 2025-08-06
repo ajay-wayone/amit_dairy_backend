@@ -24,7 +24,6 @@ class FaqController extends Controller
         $request->validate([
             'question' => 'required|string|max:255',
             'answer' => 'required|string',
-            'category' => 'nullable|string|max:255',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer',
         ]);
@@ -38,22 +37,18 @@ class FaqController extends Controller
             ->with('success', 'FAQ created successfully.');
     }
 
-    public function show(Faq $faq)
-    {
-        return view('admin.faqs.show', compact('faq'));
-    }
-
+   
     public function edit(Faq $faq)
     {
-        return view('admin.faqs.edit', compact('faq'));
+        return view('admin.faqs.update', compact('faq'));
     }
 
     public function update(Request $request, Faq $faq)
     {
+      
         $request->validate([
             'question' => 'required|string|max:255',
             'answer' => 'required|string',
-            'category' => 'nullable|string|max:255',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer',
         ]);

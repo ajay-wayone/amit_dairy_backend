@@ -14,15 +14,16 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>
-                    @if ($category->image)
-                        <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}"
-                            class="category-image">
+                    @if ($category->category_image)
+                        <img src="{{ asset('storage/' . $category->category_image) }}" alt="{{ $category->name }}"
+                            class="category-image" width="100">
                     @else
                         <div class="category-image bg-light d-flex align-items-center justify-content-center">
                             <i class="ri-image-line text-muted"></i>
                         </div>
                     @endif
                 </td>
+
                 <td>
                     <strong>{{ $category->name }}</strong>
                     @if ($category->sort_order > 0)
@@ -49,11 +50,12 @@
 
                 <td>
                     <div class="action-buttons">
-
-                        <a href="{{ route('admin.categories.edit', $category) }}" class="btn btn-warning btn-sm"
+                        <a href="{{ route('admin.categories.edit', $category->id) }}" class="btn btn-warning btn-sm"
                             title="Edit">
                             <i class="ri-edit-line"></i>
                         </a>
+
+
                         <button type="button" class="btn btn-danger btn-sm delete-category"
                             data-id="{{ $category->id }}" data-name="{{ $category->name }}" title="Delete">
                             <i class="ri-delete-bin-line"></i>
@@ -76,15 +78,3 @@
         @endforelse
     </tbody>
 </table>
-
-@if ($categories->hasPages())
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <div class="text-muted">
-            Showing {{ $categories->firstItem() }} to {{ $categories->lastItem() }} of {{ $categories->total() }}
-            entries
-        </div>
-        <div class="pagination-container">
-            {{ $categories->appends(request()->query())->links() }}
-        </div>
-    </div>
-@endif

@@ -33,9 +33,10 @@ class TestimonialController extends Controller
 
     public function store(Request $request)
     {
+    
         $request->validate([
             'customer_name' => 'required|string|max:255',
-            'customer_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'customer_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:20248',
             'testimonial' => 'required|string',
             'rating' => 'required|integer|min:1|max:5',
             'is_active' => 'boolean',

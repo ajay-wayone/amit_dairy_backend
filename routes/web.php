@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Policies\PolicyController;
+
 use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\OrderController;
@@ -45,13 +47,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Subcategories
         Route::resource('subcategories', SubcategoryController::class);
+        
         Route::post('subcategories/{subcategory}/toggle-status', [SubcategoryController::class, 'toggleStatus'])->name('subcategories.toggle-status');
 
         // Products
         Route::resource('products', ProductController::class);
         Route::post('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
         Route::post('products/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
-        Route::get('products/get-subcategories', [ProductController::class, 'getSubcategories'])->name('products.get-subcategories');
+Route::get('products/get-subcategories', [ProductController::class, 'getSubcategories'])->name('products.get-subcategories');
 
         // Orders
         Route::resource('orders', OrderController::class);
@@ -138,6 +141,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
             })->name('return.update');
         });
 
+Route::prefix('admin/policies')->name('policies.')->group(function () {
+    Route::get('{type}', [PolicyController::class, 'show'])->name('show');
+    Route::put('{type}', [PolicyController::class, 'update'])->name('update');
+});
         // Contact Details
         Route::get('contact-details', function () {
             return view('admin.contact-details.index');

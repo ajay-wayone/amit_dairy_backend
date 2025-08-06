@@ -1,39 +1,37 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Add Delivery Location - Admin Dashboard')
+@section('title', 'Add Customer - Admin Dashboard')
 
 @section('content')
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title mb-0">Add Delivery Location</h4>
+                    <h4 class="card-title mb-0">Add New Faq</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('admin.delivery-locations.store') }}">
+                    <form method="POST" action="{{ route('admin.faqs.store') }}">
                         @csrf
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="location" class="form-label small">Location Name *</label>
-                                <input type="text" name="location" id="location" placeholder="Enter the location...."
-                                    class="form-control form-control-sm  @error('location') is-invalid @enderror"
-                                    value="{{ old('location') }}" required>
-                                @error('location')
+                                <label for="question" class="form-label small">Question *</label>
+                                <textarea name="question" id="question" rows="4" placeholder="Enter the question..."
+                                    class="form-control form-control-sm @error('question') is-invalid @enderror" required>{{ old('question') }}</textarea>
+                                @error('question')
                                     <div class="invalid-feedback small">{{ $message }}</div>
                                 @enderror
                             </div>
+
 
                             <div class="col-md-6">
-                                <label for="pincode" class="form-label small">Pincode </label>
-                                <input type="text" name="pincode" id="pincode" placeholder="Enter the Pincode..."
-                                    class="form-control form-control-sm @error('Pincode') is-invalid @enderror"
-                                    value="{{ old('pincode') }}">
-                                @error('Pincode')
+                                <label for="answer" class="form-label small">Answer *</label>
+                                <textarea name="answer" id="answer" placeholder="Enter the answer..." rows="4"
+                                    class="form-control form-control-sm @error('answer') is-invalid @enderror" required>{{ old('answer') }}</textarea>
+                                @error('answer')
                                     <div class="invalid-feedback small">{{ $message }}</div>
                                 @enderror
                             </div>
-
 
 
                             <div class="col-md-6">
@@ -47,12 +45,13 @@
                                     <div class="invalid-feedback small">{{ $message }}</div>
                                 @enderror
                             </div>
+
+
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-3">
-                            <a href="{{ route('admin.delivery-locations.index') }}"
-                                class="btn btn-secondary btn-sm">Cancel</a>
-                            <button type="submit" class="btn btn-primary btn-sm">Create Location</button>
+                            <a href="{{ route('admin.faqs.index') }}" class="btn btn-secondary btn-sm">Cancel</a>
+                            <button type="submit" class="btn btn-primary btn-sm">Create Faqs</button>
                         </div>
                     </form>
                 </div>

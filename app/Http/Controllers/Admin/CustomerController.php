@@ -21,16 +21,20 @@ class CustomerController extends Controller
             });
         }
         
-        $customers = $query->orderBy('created_at', 'desc')->paginate(15);
+        $customers = $query->orderBy('created_at', 'desc')->paginate(10);
         
-        if ($request->ajax()) {
-            return response()->json([
-                'table' => view('admin.customers.partials.table', compact('customers'))->render(),
-                'pagination' => view('admin.customers.partials.pagination', compact('customers'))->render()
-            ]);
-        }
-        
-        return view('admin.customers.index', compact('customers'));
+       if ($request->ajax()) {
+    $table = view('admin.customers.partials.table', compact('customers'))->render();
+    $pagination = view('admin.customers.partials.pagination', compact('customers'))->render();
+
+    return response()->json([
+        'table' => $table,
+        'pagination' => $pagination,
+    ]);
+}
+
+return view('admin.customers.index', compact('customers'));
+
     }
 
     public function create()

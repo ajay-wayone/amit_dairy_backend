@@ -1,10 +1,26 @@
-@if($categories->hasPages())
-<div class="d-flex justify-content-between align-items-center mt-3">
-    <div class="text-muted">
-        Showing {{ $categories->firstItem() }} to {{ $categories->lastItem() }} of {{ $categories->total() }} entries
-    </div>
-    <div class="pagination-container">
-        {{ $categories->appends(request()->query())->links() }}
-    </div>
-</div>
-@endif 
+@if ($categories->hasPages())
+    <nav>
+        <ul class="pagination">
+            {{-- Previous --}}
+            @if ($categories->onFirstPage())
+                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            @else
+                <li class="page-item"><a class="page-link" href="{{ $categories->previousPageUrl() }}">Previous</a></li>
+            @endif
+
+            {{-- Pages --}}
+            @foreach ($categories->getUrlRange(1, $categories->lastPage()) as $page => $url)
+                <li class="page-item {{ $page == $categories->currentPage() ? 'active' : '' }}">
+                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                </li>
+            @endforeach
+
+            {{-- Next --}}
+            @if ($categories->hasMorePages())
+                <li class="page-item"><a class="page-link" href="{{ $categories->nextPageUrl() }}">Next</a></li>
+            @else
+                <li class="page-item disabled"><span class="page-link">Next</span></li>
+            @endif
+        </ul>
+    </nav>
+@endif

@@ -18,8 +18,7 @@ class CategoryController extends Controller
         if ($request->ajax() && $request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%");
             });
         }
 
@@ -44,7 +43,7 @@ class CategoryController extends Controller
    public function store(Request $request)
 {
     $request->validate([
-        'box_category' => 'required|string|max:255',
+        'name' => 'required|string|max:255',
         'description' => 'nullable|string',
         'box_ids_json' => 'nullable|array',
         'box_ids_json.*' => 'exists:boxes,id',
@@ -66,7 +65,8 @@ class CategoryController extends Controller
             'name'        => $request->name,
             'slug'        => Str::slug($request->name),
             'description' => $request->description,
-            'image'       => $imagePath,
+            'category_image'       => $imagePath,
+            'box_ids_json'   => json_encode($request->box_ids_json),
             'is_active'   => $request->has('is_active'),
             'sort_order'  => $request->sort_order ?? 0,
         ]);
@@ -82,11 +82,8 @@ class CategoryController extends Controller
     }
 }
 
-    public function show(Category $category)
-    {
-        $category->load(['subcategories', 'products']);
-        return view('admin.categories.show', compact('category'));
-    }
+ 
+
 
     public function edit(Category $category)
     {
@@ -97,9 +94,9 @@ class CategoryController extends Controller
 public function update(Request $request, Category $category)
 {
     $request->validate([
-        'box_category' => 'sometimes|required|string|max:255',
+        'name' => 'sometimes|string|max:255',
         'description' => 'nullable|string',
-        'category_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        'category_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:20248',
         'is_active' => 'nullable|boolean',
         'sort_order' => 'nullable|integer|min:0',
         'box_ids_json' => 'nullable|array',
@@ -109,9 +106,9 @@ public function update(Request $request, Category $category)
     try {
         $data = [];
 
-        if ($request->filled('box_category')) {
-            $data['box_category'] = $request->box_category;
-            $data['slug'] = Str::slug($request->box_category);
+        if ($request->filled('name')) {
+            $data['name'] = $request->name;
+            $data['slug'] = Str::slug($request->name);
         }
 
         if ($request->filled('description')) {
@@ -122,13 +119,17 @@ public function update(Request $request, Category $category)
         $data['sort_order'] = $request->sort_order ?? 0;
 
         if ($request->hasFile('category_image')) {
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
+            if ($category->category_image && Storage::disk('public')->exists($category->category_image)) {
+                Storage::disk('public')->delete($category->category_image);
             }
 
             $image = $request->file('category_image');
             $imageName = 'cat_' . uniqid() . '.' . $image->getClientOriginalExtension();
-            $data['image'] = $image->storeAs('categories', $imageName, 'public');
+            $data['category_image'] = $image->storeAs('categories', $imageName, 'public');
+        }
+
+        if ($request->has('box_ids_json')) {
+            $data['box_ids_json'] = json_encode($request->box_ids_json);
         }
 
         $category->update($data);
@@ -144,34 +145,43 @@ public function update(Request $request, Category $category)
     }
 }
 
-    public function destroy(Category $category)
-    {
-        try {
-            if ($category->subcategories()->count() > 0) {
-                return back()->with('error', 'Cannot delete category with subcategories!');
-            }
-
-            if ($category->products()->count() > 0) {
-                return back()->with('error', 'Cannot delete category with products!');
-            }
-
-            // Delete image if exists
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
-            }
-
-            // Detach relationships
-            $category->boxes()->detach();
-
-            // Delete from DB
-            $category->delete();
-
-            return redirect()->route('admin.categories.index')
-                ->with('success', 'Category deleted successfully!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
+  public function destroy(Category $category)
+{
+    try {
+        // Check for subcategories
+        if ($category->subcategories()->count() > 0) {
+            return back()->with('error', 'Cannot delete category with subcategories!');
         }
+
+        // Check for products
+        if ($category->products()->count() > 0) {
+            return back()->with('error', 'Cannot delete category with products!');
+        }
+
+        // ✅ Delete image if exists
+        if ($category->category_image && Storage::disk('public')->exists($category->category_image)) {
+            Storage::disk('public')->delete($category->category_image);
+        }
+
+        // Detach relationships
+        $category->boxes()->detach();
+
+        // Delete the category from DB
+        $category->delete();
+
+        return redirect()->route('admin.categories.index')
+            ->with('success', 'Category deleted successfully!');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
     }
+}
+public function show($id)
+{
+    $category = Category::findOrFail($id);
+    return view('admin.categories.show', compact('category'));
+}
+
+
 
     public function toggleStatus(Category $category)
     {

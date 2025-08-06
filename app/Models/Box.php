@@ -20,4 +20,10 @@ class Box extends Model
         'is_active' => 'boolean',
         'box_price' => 'decimal:2',
     ];
+
+    // ✅ Many-to-many relation with Category
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'category_box');
+    }
 }
