@@ -23,7 +23,7 @@ class RouteServiceProvider extends ServiceProvider
 
         $this->routes(function () {
             Route::middleware('api')
-                ->prefix('api') // This adds '/api' prefix to all routes in api.php
+                ->prefix('api') 
                 ->group(base_path('routes/api.php'));
 
             Route::middleware('web')
