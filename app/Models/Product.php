@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,21 +18,24 @@ class Product extends Model
         'unit',
         'types',
         'price',
-        'discounted_price',
+        'weight',
+        'weight_type',
+        'featured_type',
+        'discount_price',
         'minimum_quantity',
         'max_order',
         'featured_type',
-        'image',
-        'is_active'
+        'product_image',
+        'is_active',
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
-        'discounted_price' => 'decimal:2',
-        'quantity' => 'decimal:2',
+        'price'            => 'decimal:2',
+        'discount_price'   => 'decimal:2',
+        'quantity'         => 'decimal:2',
         'minimum_quantity' => 'decimal:2',
-        'types' => 'array',
-        'is_active' => 'boolean',
+        'types'            => 'array',
+        'is_active'        => 'boolean',
     ];
 
     public function category()

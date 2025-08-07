@@ -1,39 +1,53 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Add Products - Admin Dashboard')
+@section('title', 'Add Product - Admin Dashboard')
 
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0">Add New Products</h4>
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.products.index') }}">Products</a></li>
-                        <li class="breadcrumb-item active">Add Products</li>
-                    </ol>
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0">Add New Product</h4>
+                    <div class="page-title-right">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{{ route('admin.products.index') }}">Products</a></li>
+                                <li class="breadcrumb-item active">Add Product</li>
+                            </ol>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Products Create</h4>
-                </div>
-                <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <!-- Category & Subcategory -->
-                            <div class="col-md-6">
-                                <div class="form-floating">
+        <!-- Main Form -->
+        <div class="row justify-content-center">
+            <div class="col-lg-16">
+                <div class="card shadow-sm">
+
+
+                    <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data"
+                        id="productForm">
+                        @csrf
+                        <div class="card-body">
+                            <!-- Basic Information Section -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary border-bottom pb-2 mb-3">
+                                        <i class="fas fa-info-circle me-2"></i>Basic Information
+                                    </h6>
+                                </div>
+
+                                <!-- Category & Subcategory -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="category_id" class="form-label fw-bold">
+                                        Category <span class="text-danger">*</span>
+                                    </label>
                                     <select class="form-select @error('category_id') is-invalid @enderror"
                                         name="category_id" id="category_id" required>
-                                        <option value="">Select Category</option>
+                                        <option value="">Choose Category</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->id }}"
                                                 {{ old('category_id') == $category->id ? 'selected' : '' }}>
@@ -41,241 +55,302 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <label for="category_id" class="form-label">Category <span
-                                            class="text-danger">*</span></label>
                                     @error('category_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
 
-                            <div class="col-md-6">
-                                <div class="form-floating">
+                                <div class="col-md-6 mb-3">
+                                    <label for="subcategory_id" class="form-label fw-bold">
+                                        Subcategory <span class="text-danger">*</span>
+                                    </label>
                                     <select class="form-select @error('subcategory_id') is-invalid @enderror"
                                         name="subcategory_id" id="subcategory_id" required>
-                                        <option value="">Select Subcategory</option>
+                                        <option value="">Choose Subcategory</option>
                                     </select>
-                                    <label for="subcategory_id" class="form-label">Subcategory <span
-                                            class="text-danger">*</span></label>
                                     @error('subcategory_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
 
-                            <!-- Product Name -->
-                            <div class="col-md-6">
-                                <div class="form-floating">
+                                <!-- Product Name -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="name" class="form-label fw-bold">
+                                        Product Name <span class="text-danger">*</span>
+                                    </label>
                                     <input type="text" class="form-control @error('name') is-invalid @enderror"
                                         id="name" name="name" placeholder="Enter product name"
                                         value="{{ old('name') }}" required>
-                                    <label for="name" class="form-label">Product Name <span
-                                            class="text-danger">*</span></label>
                                     @error('name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
 
-                            <!-- Description -->
-                            <div class="col-12">
-                                <div class="form-floating">
-                                    <textarea placeholder="Enter the desc..." class="form-control @error('description') is-invalid @enderror"
-                                        name="description" id="description" style="height: 100px">{{ old('description') }}</textarea>
-                                    <label for="description" class="form-label">Description</label>
+                                <!-- Description -->
+                                <div class="col-12 mb-3">
+                                    <label for="description" class="form-label fw-bold">Description</label>
+                                    <textarea class="form-control @error('description') is-invalid @enderror" name="description" id="description"
+                                        rows="4" placeholder="Enter product description">{{ old('description') }}</textarea>
                                     @error('description')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
 
-                            <!-- Quantity & Unit -->
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="number" step="0.01" placeholder="Enter the quantity..."
-                                        class="form-control @error('quantity') is-invalid @enderror" name="quantity"
-                                        id="quantity" value="{{ old('quantity') }}">
-                                    <label for="quantity" class="form-label">Quantity</label>
-                                    @error('quantity')
+                            <!-- Product Details Section -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary border-bottom pb-2 mb-3">
+                                        <i class="fas fa-cogs me-2"></i>Product Details
+                                    </h6>
+                                </div>
+
+                                <!-- Weight & Weight Type -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="weight" class="form-label fw-bold">Weight</label>
+                                    <input type="number" step="0.01"
+                                        class="form-control @error('weight') is-invalid @enderror" name="weight"
+                                        id="weight" placeholder="Enter weight..." value="{{ old('weight') }}">
+                                    @error('weight')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
 
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <select class="form-select @error('unit') is-invalid @enderror" name="unit"
-                                        id="unit">
-                                        <option value="">Select Unit</option>
-                                        <option value="gram" {{ old('unit') == 'gram' ? 'selected' : '' }}>Gram</option>
-                                        <option value="kilogram" {{ old('unit') == 'kilogram' ? 'selected' : '' }}>Kilogram
+                                <div class="col-md-6 mb-3">
+                                    <label for="weight_type" class="form-label fw-bold">Weight Type</label>
+                                    <select class="form-select @error('weight_type') is-invalid @enderror"
+                                        name="weight_type" id="weight_type">
+                                        <option value="">Select Weight Type</option>
+                                        <option value="gram" {{ old('weight_type') == 'gram' ? 'selected' : '' }}>Gram
                                         </option>
-                                        <option value="unit" {{ old('unit') == 'unit' ? 'selected' : '' }}>Unit</option>
+                                        <option value="kilogram" {{ old('weight_type') == 'kilogram' ? 'selected' : '' }}>
+                                            Kilogram</option>
+                                        <option value="pound" {{ old('weight_type') == 'pound' ? 'selected' : '' }}>Pound
+                                        </option>
                                     </select>
-                                    <label for="unit" class="form-label">Unit</label>
-                                    @error('unit')
+                                    @error('weight_type')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
 
-                            <!-- Types Checkbox Group -->
-                            <div class="col-md-6">
-                                <label class="form-label">Types</label>
-                                @php
-                                    $selectedTypes = old('type', []);
-                                @endphp
-                                <div class="d-flex flex-wrap gap-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="type[]" value="500"
-                                            id="type500" {{ in_array('500', $selectedTypes) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="type500">500</label>
+                                <!-- Product Types -->
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Product Types</label>
+                                    <div class="row g-2">
+                                        @php $selectedTypes = old('type', []); @endphp
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="type[]"
+                                                    value="500" id="type500"
+                                                    {{ in_array('500', $selectedTypes) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="type500">500</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="type[]"
+                                                    value="750" id="type750"
+                                                    {{ in_array('750', $selectedTypes) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="type750">750</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="type[]"
+                                                    value="1000" id="type1000"
+                                                    {{ in_array('1000', $selectedTypes) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="type1000">1000</label>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="type[]" value="750"
-                                            id="type750" {{ in_array('750', $selectedTypes) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="type750">750</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="type[]" value="1000"
-                                            id="type1000" {{ in_array('1000', $selectedTypes) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="type1000">1000</label>
-                                    </div>
-                                </div>
-                                @error('type')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Pricing Section -->
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="number" step="0.01" placeholder="Enter the price..."
-                                        class="form-control @error('price') is-invalid @enderror" name="price"
-                                        id="price" value="{{ old('price') }}" required>
-                                    <label for="price" class="form-label">Price (₹) <span
-                                            class="text-danger">*</span></label>
-                                    @error('price')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @error('type')
+                                        <div class="text-danger small">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
 
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="number" step="0.01" placeholder="Enter the discounted_price..."
-                                        class="form-control @error('discounted_price') is-invalid @enderror"
-                                        name="discounted_price" id="discounted_price"
-                                        value="{{ old('discounted_price') }}">
-                                    <label for="discounted_price" class="form-label">Discounted Price (₹)</label>
-                                    @error('discounted_price')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
+                                <!-- Tags -->
+                                <!-- Featured Type -->
+                                <div class="col-md-6">
+                                    <label for="featured_type" class="form-label fw-bold">Features Type </label>
 
-                            <!-- Quantity Controls -->
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="number" step="0.01" placeholder="Enter the minimum_quantity...."
-                                        class="form-control @error('minimum_quantity') is-invalid @enderror"
-                                        name="minimum_quantity" id="minimum_quantity"
-                                        value="{{ old('minimum_quantity') }}">
-                                    <label for="minimum_quantity" class="form-label">Minimum Order Quantity</label>
-                                    @error('minimum_quantity')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input type="number" placeholder="Enter the Maximum order..."
-                                        class="form-control @error('max_order') is-invalid @enderror" name="max_order"
-                                        id="max_order" value="{{ old('max_order') }}">
-                                    <label for="max_order" class="form-label">Maximum Order</label>
-                                    @error('max_order')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <!-- Featured Type -->
-                            <div class="col-md-6">
-                                <div class="form-floating">
                                     <select class="form-select @error('featured_type') is-invalid @enderror"
                                         name="featured_type" id="featured_type">
                                         <option value="">Select Featured Type</option>
-                                        <option value="hot" {{ old('featured_type') == 'hot' ? 'selected' : '' }}>Hot
-                                        </option>
+                                        <option value="hot" {{ old('featured_type') == 'hot' ? 'selected' : '' }}>
+                                            Hot</option>
                                         <option value="new_arrival"
-                                            {{ old('featured_type') == 'new_arrival' ? 'selected' : '' }}>New Arrival
-                                        </option>
+                                            {{ old('featured_type') == 'new_arrival' ? 'selected' : '' }}>
+                                            New Arrival</option>
                                         <option value="featured"
-                                            {{ old('featured_type') == 'featured' ? 'selected' : '' }}>Featured</option>
+                                            {{ old('featured_type') == 'featured' ? 'selected' : '' }}>
+                                            Featured</option>
                                     </select>
-                                    <label for="featured_type" class="form-label">Featured Type</label>
                                     @error('featured_type')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
 
-                            <!-- Active Status -->
-                            <div class="col-md-6">
-                                <div class="form-check form-switch mt-3">
-                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
-                                        value="1" {{ old('is_active') ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_active">Active Status</label>
-                                </div>
-                            </div>
+                                <!-- Pricing Section -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                                            <i class="fas fa-tag me-2"></i>Pricing Information
+                                        </h6>
+                                    </div>
 
-                            <!-- Product Image -->
-                            <div class="col-md-6">
-                                <label for="products_image" class="form-label">Product Image <span
-                                        class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="file"
-                                        class="form-control @error('products_image') is-invalid @enderror"
-                                        id="products_image" name="products_image" accept="image/*" required>
-                                    <button class="btn btn-outline-secondary" type="button"
-                                        id="clearImage">Clear</button>
-                                    @error('products_image')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="form-text">
-                                    Supported formats: JPG, JPEG, PNG, WEBP<br>
-                                    Max size: 2MB
-                                </div>
-                            </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="price" class="form-label fw-bold">
+                                            Price (₹) <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" step="0.01"
+                                                class="form-control @error('price') is-invalid @enderror" name="price"
+                                                id="price" placeholder="0.00" value="{{ old('price') }}" required>
+                                        </div>
+                                        @error('price')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
 
-                            <!-- Image Preview -->
-                            <div class="col-md-6">
-                                <div id="imagePreview" class="d-none">
-                                    <div class="card">
-                                        <div class="card-body text-center">
-                                            <img id="previewImg" src="" alt="Preview" class="img-fluid rounded"
-                                                style="max-height: 200px;">
-                                            <p class="mt-2 mb-0 text-muted">Image Preview</p>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="discount_price" class="form-label fw-bold">Discount Price (₹)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" step="0.01"
+                                                class="form-control @error('discount_price') is-invalid @enderror"
+                                                name="discount_price" id="discount_price" placeholder="0.00"
+                                                value="{{ old('discount_price') }}">
+                                        </div>
+                                        @error('discount_price')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label for="min_order" class="form-label fw-bold">Minimum Order</label>
+                                        <input type="number"
+                                            class="form-control @error('min_order') is-invalid @enderror" name="min_order"
+                                            id="min_order" placeholder="1" value="{{ old('min_order', 1) }}">
+                                        @error('min_order')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="max_order" class="form-label fw-bold">Maximum Order</label>
+                                        <input type="number"
+                                            class="form-control @error('max_order') is-invalid @enderror"
+                                            name="max_order" id="max_order" placeholder="Enter maximum order"
+                                            value="{{ old('max_order') }}">
+                                        @error('max_order')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Product Status Section -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                                            <i class="fas fa-toggle-on me-2"></i>Product Status
+                                        </h6>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="best_seller"
+                                                name="best_seller" value="1"
+                                                {{ old('best_seller') ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold" for="best_seller">
+                                                <i class="fas fa-star text-warning me-1"></i>Best Seller
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="specialities"
+                                                name="specialities" value="1"
+                                                {{ old('specialities') ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold" for="specialities">
+                                                <i class="fas fa-gem text-info me-1"></i>Specialities
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="status"
+                                                name="status" value="1" {{ old('status', true) ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold" for="status">
+                                                <i class="fas fa-check-circle text-success me-1"></i>Active Status
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Product Image Section -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-primary border-bottom pb-2 mb-3">
+                                            <i class="fas fa-image me-2"></i>Product Image
+                                        </h6>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="product_image" class="form-label fw-bold">
+                                            Product Image <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="file"
+                                                class="form-control @error('product_image') is-invalid @enderror"
+                                                id="product_image" name="product_image" accept="image/*" required>
+                                            <button class="btn btn-outline-secondary" type="button" id="clearImage">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Supported: JPG, JPEG, PNG, WEBP | Max: 2MB
+                                        </div>
+                                        @error('product_image')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <div id="imagePreview" class="d-none">
+                                            <div class="card border-0 shadow-sm">
+                                                <div class="card-body text-center p-3">
+                                                    <img id="previewImg" src="" alt="Preview"
+                                                        class="img-fluid rounded" style="max-height: 200px;">
+                                                    <p class="mt-2 mb-0 text-muted small">
+                                                        <i class="fas fa-eye me-1"></i>Image Preview
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="card-footer bg-light">
-                        <div class="d-flex justify-content-end gap-2">
-                            <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left me-1"></i> Cancel
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save me-1"></i> Create Product
-                            </button>
-                        </div>
-                    </div>
-                </form>
+                            <!-- Form Actions -->
+                            <div class="card-footer bg-light">
+                                <div class="d-flex justify-content-between align-items-center">
+
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('admin.products.index') }}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                                        </a>
+                                        <button type="submit" class="btn btn-outline-primary">
+                                            <i class="fas fa-save me-2"></i>Create Product
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -284,20 +359,70 @@
 @push('styles')
     <style>
         .form-check-input:checked {
-            background-color: #556ee6;
-            border-color: #556ee6;
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .form-check-input:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(199, 200, 203, 0.25);
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .card-header {
+            border-bottom: 1px solid rgba(237, 229, 229, 0.13);
+        }
+
+        .form-label {
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        .input-group-text {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+        }
+
+        .btn {
+            border-radius: 0.375rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+
+        .text-primary {
+            color: #0d6efd !important;
+        }
+
+        .border-bottom {
+            border-bottom: 2px solid #e9ecef !important;
         }
 
         #imagePreview {
-            border: 2px dashed #dee2e6;
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
+            transition: all 0.3s ease;
         }
 
-        #previewImg {
-            max-width: 100%;
-            height: auto;
+        .form-text {
+            color: #6c757d;
+            font-size: 0.875rem;
         }
     </style>
 @endpush
@@ -305,12 +430,16 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            console.log('Product create page loaded');
+
             const categorySelect = $('#category_id');
             const subcategorySelect = $('#subcategory_id');
 
-            // 🔄 Category change => load subcategories
+            // Category change handler
             categorySelect.on('change', function() {
                 const categoryId = $(this).val();
+                console.log('Category changed to:', categoryId);
+
                 subcategorySelect.empty().append('<option value="">Loading...</option>');
 
                 if (categoryId) {
@@ -322,33 +451,56 @@
                         },
                         success: function(data) {
                             subcategorySelect.empty().append(
-                                '<option value="">Select Subcategory</option>');
-                            $.each(data, function(index, subcategory) {
-                                subcategorySelect.append(
-                                    $('<option></option>').val(subcategory.id).text(
-                                        subcategory.subcategory_name)
-                                );
-                            });
+                                '<option value="">Choose Subcategory</option>');
+
+                            if (data.success && data.data && data.data.length > 0) {
+                                $.each(data.data, function(index, subcategory) {
+                                    subcategorySelect.append(
+                                        $('<option></option>')
+                                        .val(subcategory.id)
+                                        .text(subcategory.subcategory_name)
+                                    );
+                                });
+                                console.log('Loaded', data.count, 'subcategories');
+                            } else {
+                                console.log('No subcategories found');
+                            }
                         },
-                        error: function() {
+                        error: function(xhr, status, error) {
+                            console.error('AJAX Error:', error);
                             subcategorySelect.empty().append(
                                 '<option value="">Error loading subcategories</option>');
                         }
                     });
                 } else {
-                    subcategorySelect.empty().append('<option value="">Select Subcategory</option>');
+                    subcategorySelect.empty().append('<option value="">Choose Subcategory</option>');
                 }
             });
 
-            // 🔄 Trigger if editing
+            // Trigger category change if editing
             @if (old('category_id'))
                 categorySelect.trigger('change');
             @endif
 
-            // 🖼️ Image Preview
-            $('#products_image').on('change', function() {
+            // Image preview handler
+            $('#product_image').on('change', function() {
                 const file = this.files[0];
                 if (file) {
+                    // Validate file type
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                    if (!allowedTypes.includes(file.type)) {
+                        alert('Please select a valid image file (JPG, JPEG, PNG, WEBP)');
+                        this.value = '';
+                        return;
+                    }
+
+                    // Validate file size (2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('File size must be less than 2MB');
+                        this.value = '';
+                        return;
+                    }
+
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         $('#previewImg').attr('src', e.target.result);
@@ -358,11 +510,37 @@
                 }
             });
 
-            // ❌ Clear image preview
+            // Clear image preview
             $('#clearImage').on('click', function() {
-                $('#products_image').val('');
+                $('#product_image').val('');
                 $('#previewImg').attr('src', '');
                 $('#imagePreview').addClass('d-none');
+            });
+
+            // Form validation
+            $('#productForm').on('submit', function(e) {
+                const categoryId = $('#category_id').val();
+                const subcategoryId = $('#subcategory_id').val();
+                const productName = $('#name').val().trim();
+                const price = $('#price').val();
+                const image = $('#product_image').val();
+
+                let isValid = true;
+                let errors = [];
+
+                if (!categoryId) errors.push('Please select a category');
+                if (!subcategoryId) errors.push('Please select a subcategory');
+                if (!productName) errors.push('Please enter a product name');
+                if (!price || price <= 0) errors.push('Please enter a valid price');
+                if (!image) errors.push('Please select a product image');
+
+                if (errors.length > 0) {
+                    e.preventDefault();
+                    alert('Please fix the following errors:\n• ' + errors.join('\n• '));
+                    return false;
+                }
+
+                console.log('Form submitted successfully');
             });
         });
     </script>

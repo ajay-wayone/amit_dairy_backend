@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,8 +12,9 @@ class OrderItem extends Model
         'order_id',
         'product_id',
         'product_name',
-        'quantity',
+        'quantproduct_sku',
         'price',
+        'quantity',
         'total',
     ];
 

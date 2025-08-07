@@ -290,24 +290,12 @@
                                             data-key="t-one-page">Banners</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.policies.disclaimer') }}" class="nav-link"
-                                            data-key="t-job">Disclaimer</a>
+                                        <a href="{{ route('admin.policies.index') }}" class="nav-link"
+                                            data-key="t-job">All Policies</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.policies.terms') }}" class="nav-link"
-                                            data-key="t-job">Terms & Condition</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('admin.policies.privacy') }}" class="nav-link"
-                                            data-key="t-job">Privacy Policy</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('admin.policies.refund') }}" class="nav-link"
-                                            data-key="t-job">Refund Policy</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('admin.policies.return') }}" class="nav-link"
-                                            data-key="t-job">Return Policy</a>
+                                        <a href="{{ route('admin.policies.create') }}" class="nav-link"
+                                            data-key="t-job">Create Policy</a>
                                     </li>
                                     <li class="nav-item">
                                         <a href="{{ route('admin.faqs.index') }}" class="nav-link"

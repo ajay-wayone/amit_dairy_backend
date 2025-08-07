@@ -1,24 +1,23 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Policies\PolicyController;
-
-use App\Http\Controllers\Admin\SubcategoryController;
-use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\BoxController;
-use App\Http\Controllers\Admin\TestimonialController;
-use App\Http\Controllers\Admin\SubscriptionController;
-use App\Http\Controllers\Admin\FaqController;
-use App\Http\Controllers\Admin\NewsletterController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DeliveryLocationController;
+use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\ForgotPasswordController;
+use App\Http\Controllers\Admin\NewsletterController;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\SubcategoryController;
+use App\Http\Controllers\Admin\SubscriptionController;
+use App\Http\Controllers\Admin\TestimonialController;
+use App\Http\Controllers\Admin\PolicyController;
+use Illuminate\Support\Facades\Route;
 
 // Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -26,7 +25,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest:admin')->group(function () {
         Route::get('login', [AdminController::class, 'showLoginForm'])->name('login');
         Route::post('login', [AdminController::class, 'login']);
-        
+
         // Forgot Password Routes
         Route::get('forgot-password', [ForgotPasswordController::class, 'showForgotForm'])->name('forgot-password');
         Route::post('send-otp', [ForgotPasswordController::class, 'sendOTP'])->name('send-otp');
@@ -47,14 +46,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Subcategories
         Route::resource('subcategories', SubcategoryController::class);
-        
+
         Route::post('subcategories/{subcategory}/toggle-status', [SubcategoryController::class, 'toggleStatus'])->name('subcategories.toggle-status');
 
         // Products
+        Route::get('products/get-subcategories', [ProductController::class, 'getSubcategories'])->name('products.get-subcategories');
+
+// Products - Main routes
         Route::resource('products', ProductController::class);
         Route::post('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
         Route::post('products/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
-Route::get('products/get-subcategories', [ProductController::class, 'getSubcategories'])->name('products.get-subcategories');
 
         // Orders
         Route::resource('orders', OrderController::class);
@@ -103,48 +104,14 @@ Route::get('products/get-subcategories', [ProductController::class, 'getSubcateg
         Route::resource('delivery-locations', DeliveryLocationController::class);
         Route::post('delivery-locations/{location}/toggle-status', [DeliveryLocationController::class, 'toggleStatus'])->name('delivery-locations.toggle-status');
 
-        // Policies
-        Route::prefix('policies')->name('policies.')->group(function () {
-            Route::get('disclaimer', function () {
-                return view('admin.policies.disclaimer');
-            })->name('disclaimer');
-            Route::put('disclaimer', function () {
-                return redirect()->back()->with('success', 'Disclaimer updated successfully!');
-            })->name('disclaimer.update');
-            
-            Route::get('terms', function () {
-                return view('admin.policies.terms');
-            })->name('terms');
-            Route::put('terms', function () {
-                return redirect()->back()->with('success', 'Terms updated successfully!');
-            })->name('terms.update');
-            
-            Route::get('privacy', function () {
-                return view('admin.policies.privacy');
-            })->name('privacy');
-            Route::put('privacy', function () {
-                return redirect()->back()->with('success', 'Privacy policy updated successfully!');
-            })->name('privacy.update');
-            
-            Route::get('refund', function () {
-                return view('admin.policies.refund');
-            })->name('refund');
-            Route::put('refund', function () {
-                return redirect()->back()->with('success', 'Refund policy updated successfully!');
-            })->name('refund.update');
-            
-            Route::get('return', function () {
-                return view('admin.policies.return');
-            })->name('return');
-            Route::put('return', function () {
-                return redirect()->back()->with('success', 'Return policy updated successfully!');
-            })->name('return.update');
-        });
+                // Policies
+        Route::resource('policies', PolicyController::class);
+        Route::post('policies/{policy}/toggle-status', [PolicyController::class, 'toggleStatus'])->name('policies.toggle-status');
 
-Route::prefix('admin/policies')->name('policies.')->group(function () {
-    Route::get('{type}', [PolicyController::class, 'show'])->name('show');
-    Route::put('{type}', [PolicyController::class, 'update'])->name('update');
-});
+        Route::prefix('admin/policies')->name('policies.')->group(function () {
+            Route::get('{type}', [PolicyController::class, 'show'])->name('show');
+            Route::put('{type}', [PolicyController::class, 'update'])->name('update');
+        });
         // Contact Details
         Route::get('contact-details', function () {
             return view('admin.contact-details.index');

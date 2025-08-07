@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('address');
-            $table->string('phone')->nullable();
+            $table->string('pincode')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

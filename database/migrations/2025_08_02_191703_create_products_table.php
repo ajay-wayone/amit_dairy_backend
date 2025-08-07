@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
+            $table->string('product_code')->unique();
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->foreignId('subcategory_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('name');
@@ -20,17 +21,19 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->text('short_description')->nullable();
             $table->decimal('price', 10, 2);
-            $table->decimal('sale_price', 10, 2)->nullable();
-            $table->integer('stock_quantity')->default(0);
-            $table->string('sku')->unique();
-            $table->string('image')->nullable();
-            $table->json('gallery_images')->nullable();
-            $table->boolean('is_featured')->default(false);
-            $table->boolean('is_active')->default(true);
-            $table->integer('sort_order')->default(0);
+            $table->decimal('discount_price', 10, 2)->nullable();
+            $table->string('product_image')->nullable();
+            $table->json('types')->nullable(); // For product types like sizes/flavors etc.
             $table->decimal('weight', 8, 2)->nullable();
-            $table->string('unit')->default('kg');
+            $table->string('weight_type')->nullable(); // e.g., kg, g, L, ml, etc.
+            $table->integer('min_order')->default(1);
+            $table->integer('max_order')->nullable();
+            $table->boolean('best_seller')->default(false);
+            $table->boolean('specialities')->default(false); // Can change to text if storing multiple specialities
+            $table->boolean('status')->default(true);
+            $table->string('tags')->nullable(); // Can use JSON or TEXT if multiple tags
             $table->timestamps();
+
         });
     }
 

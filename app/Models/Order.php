@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,14 +27,27 @@ class Order extends Model
         'order_notes',
         'delivery_date',
         'delivered_at',
+        'number_of_boxes',
+        'user_id',
+        'cart_data',
+        'address_details',
+        'house_block',
+        'area_road',
+        'save_as',
+        'receiver_name',
+        'receiver_phone',
+        'latitude',
+        'longitude',
+        'delivery_time',
     ];
 
     protected $casts = [
-        'subtotal' => 'decimal:2',
+        'subtotal'        => 'decimal:2',
         'delivery_charge' => 'decimal:2',
-        'total_amount' => 'decimal:2',
-        'delivery_date' => 'datetime',
-        'delivered_at' => 'datetime',
+        'total_amount'    => 'decimal:2',
+        'delivery_date'   => 'datetime',
+        'delivered_at'    => 'datetime',
+        'cart_data'       => 'array', // Cast JSON to array
     ];
 
     public function customer()
