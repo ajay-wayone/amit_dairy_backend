@@ -13,9 +13,8 @@ return new class extends Migration
     {
         Schema::create('delivery_locations', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('address');
-            $table->string('pincode')->nullable();
+            $table->string('location');
+            $table->text('pincode');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
@@ -28,4 +27,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('delivery_locations');
     }
-}; 
+};

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -8,27 +7,30 @@ use Illuminate\Http\Request;
 
 class NewsletterController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $newsletters = Newsletter::orderBy('created_at', 'desc')->paginate(15);
-        return view('admin.newsletters.index', compact('newsletters'));
-    }
+        $search = $request->input('search');
 
-    public function create()
-    {
-        return view('admin.newsletters.create');
+        $newsletters = Newsletter::when($search, function ($query, $search) {
+            return $query->where('email', 'like', "%{$search}%");
+        })
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends(['search' => $search]); // preserve search on pagination links
+
+        return view('admin.newsletters.index', compact('newsletters', 'search'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|unique:newsletters,email',
-            'name' => 'nullable|string|max:255',
+            'email'     => 'required|email|unique:newsletters,email',
+            'name'      => 'nullable|string|max:255',
             'is_active' => 'boolean',
         ]);
 
-        $data = $request->all();
-        $data['is_active'] = $request->has('is_active');
+        $data                  = $request->all();
+        $data['is_active']     = $request->has('is_active');
         $data['subscribed_at'] = now();
 
         Newsletter::create($data);
@@ -50,12 +52,12 @@ class NewsletterController extends Controller
     public function update(Request $request, Newsletter $newsletter)
     {
         $request->validate([
-            'email' => 'required|email|unique:newsletters,email,' . $newsletter->id,
-            'name' => 'nullable|string|max:255',
+            'email'     => 'required|email|unique:newsletters,email,' . $newsletter->id,
+            'name'      => 'nullable|string|max:255',
             'is_active' => 'boolean',
         ]);
 
-        $data = $request->all();
+        $data              = $request->all();
         $data['is_active'] = $request->has('is_active');
 
         $newsletter->update($data);
@@ -64,22 +66,22 @@ class NewsletterController extends Controller
             ->with('success', 'Newsletter subscription updated successfully.');
     }
 
-    public function destroy(Newsletter $newsletter)
-    {
-        $newsletter->delete();
+   public function destroy(Newsletter $newsletter)
+{
+    $newsletter->delete();
 
+    if (request()->ajax()) {
+        // AJAX request => JSON response
+        return response()->json([
+            'success' => true,
+            'message' => 'Newsletter subscription deleted successfully.',
+        ]);
+    } else {
+        // Normal request => redirect with success message
         return redirect()->route('admin.newsletters.index')
             ->with('success', 'Newsletter subscription deleted successfully.');
     }
+}
 
-    public function toggleStatus(Newsletter $newsletter)
-    {
-        $newsletter->update(['is_active' => !$newsletter->is_active]);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Newsletter status updated successfully.',
-            'is_active' => $newsletter->is_active
-        ]);
-    }
+
 }

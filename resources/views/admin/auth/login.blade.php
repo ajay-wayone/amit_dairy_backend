@@ -198,13 +198,28 @@
 
                 <div class="mb-3">
                     <label for="password-input" class="mb-1">Password:</label>
-
-                    <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
-                        id="password-input" placeholder="Enter your password..." required>
+                    <div class="input-group">
+                        <input type="password" name="password"
+                            class="form-control @error('password') is-invalid @enderror" id="password-input"
+                            placeholder="Enter your password..." required>
+                        <button type="button" class="btn btn-outline-danger" id="toggle-password">
+                            👁
+                        </button>
+                    </div>
                     @error('password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
+
+                <script>
+                    document.getElementById('toggle-password').addEventListener('click', function() {
+                        const passwordInput = document.getElementById('password-input');
+                        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                        passwordInput.setAttribute('type', type);
+                        this.textContent = type === 'password' ? '👁' : 'show';
+                    });
+                </script>
+
 
                 <div class="d-grid mb-3">
                     <button type="submit" class="btn btn-login text-white" id="loginBtn">

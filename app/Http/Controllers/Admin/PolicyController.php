@@ -82,6 +82,7 @@ class PolicyController extends Controller
      */
     public function update(Request $request, Policy $policy)
     {
+    
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'content' => 'required|string',

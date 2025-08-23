@@ -31,7 +31,7 @@
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>Sr.n</th>
                                     <th>Question</th>
                                     <th>Answer</th>
                                     <th>Status</th>
@@ -40,9 +40,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($faqs as $faq)
+                                @forelse($faqs as $key=> $faq)
                                     <tr>
-                                        <td>{{ $faq->id }}</td>
+                                        <td>{{ $key+1 }}</td>
                                         <td>{{ Str::limit($faq->question, 100) }}</td>
                                         <td>{{ Str::limit($faq->answer, 150) }}</td>
                                         

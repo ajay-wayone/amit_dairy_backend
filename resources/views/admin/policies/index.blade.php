@@ -34,6 +34,7 @@
                                     <tr>
                                         <th>Type</th>
                                         <th>Title</th>
+                                        <th>Content</th>
                                         <th>Status</th>
                                         <th>Last Updated</th>
                                         <th>Actions</th>
@@ -46,6 +47,7 @@
                                                 <span class="badge text-warning">{{ $policy->type_label }}</span>
                                             </td>
                                             <td>{{ $policy->title }}</td>
+                                                <td>{{ trim(html_entity_decode(strip_tags($policy->content))) }}</td>
                                             <td>
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input toggle-status" type="checkbox"
@@ -57,9 +59,9 @@
                                             <td>
                                                 <div class="btn-group" role="group" aria-label="Policy Actions">
                                                     <!-- Edit Button -->
-                                                    <a href="{{ route('admin.policies.edit', $policy) }}"
+                                                    <a href="{{ route('admin.policies.edit', $policy->id) }}"
                                                         class="btn btn-sm btn-outline-info d-flex align-items-center justify-content-center p-1 me-2"
-                                                        title="Edit" style="height:32px; width:32px;">
+                                                        title="Edit" style="height:20px; width:22px;">
                                                         <i class="bi bi-pencil fs-6"></i>
                                                     </a>
 
@@ -71,7 +73,7 @@
                                                         @method('DELETE')
                                                         <button type="submit"
                                                             class="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center p-1"
-                                                            title="Delete" style="height:32px; width:32px;">
+                                                            title="Delete" style="height:20px; width:22px;">
                                                             <i class="bi bi-trash fs-6"></i>
                                                         </button>
                                                     </form>
@@ -93,10 +95,11 @@
         </div>
     </div>
 @endsection
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 
 @push('scripts')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
     <script>
         $(document).ready(function() {
             // Toggle policy status

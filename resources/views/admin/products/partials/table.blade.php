@@ -8,6 +8,7 @@
             <th width="12%">Subcategory</th>
             <th width="8%">Price</th>
             <th width="8%">Discounted Price</th>
+            <th width="8%">Weight_type</th>
             <th width="8%">Status</th>
             <th width="15%">Actions</th>
         </tr>
@@ -33,20 +34,20 @@
                     </a>
 
                     @if ($product->featured_type)
-                        <br><span class="badge bg-warning">{{ ucfirst($product->featured_type) }}</span>
+                        <br><span class="badge text-warning">{{ ucfirst($product->featured_type) }}</span>
                     @endif
                 </td>
 
                 <td>
                     @if ($product->category)
-                        <span class="badge bg-primary">{{ $product->category->name }}</span>
+                        <span class="badge text-info">{{ $product->category->name }}</span>
                     @else
                         <span class="text-muted">No Category</span>
                     @endif
                 </td>
                 <td>
                     @if ($product->subcategory)
-                        <span class="badge bg-info">{{ $product->subcategory->subcategory_name }}</span>
+                        <span class="badge text-danger">{{ $product->subcategory->subcategory_name }}</span>
                     @else
                         <span class="text-muted">No Subcategory</span>
                     @endif
@@ -54,6 +55,7 @@
                 <td>
                     <strong>₹{{ number_format($product->price, 2) }}</strong>
                 </td>
+                
                 <td>
                     @if ($product->discount_price)
                         <strong class="text-success">₹{{ number_format($product->discount_price, 2) }}</strong>
@@ -61,27 +63,27 @@
                         <span class="text-muted">-</span>
                     @endif
                 </td>
+                 <td>
+                    {{($product->weight_type) }}
+                </td>
 
                 <td>
-                    <button type="button"
-                        class="btn btn-sm toggle-status {{ $product->is_active ? 'btn-success' : 'btn-warning' }}"
-                        data-id="{{ $product->id }}">
-                        @if ($product->is_active)
-                            <i class="ri-check-line"></i> Active
-                        @else
-                            <i class="ri-close-line"></i> Inactive
-                        @endif
-                    </button>
+                  <button class="btn toggle-status btn btn-outline-info" data-id="{{ $product->id }}">
+                @if($product->status)
+                </i> Active
+                @else
+                    </i> Inactive
+                @endif
+            </button>
                 </td>
                 <td>
                     <div class="btn-group btn-group-sm" role="group">
-
                         <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-warning me-2"
                             title="Edit">
                             <i class="ri-edit-line"></i>
                         </a>
                         <button type="button" class="btn btn-danger delete-product" data-id="{{ $product->id }}"
-                            title="Delete">
+                            data-name="{{ $product->name }}" title="Delete">
                             <i class="ri-delete-bin-line"></i>
                         </button>
                     </div>

@@ -15,14 +15,21 @@ class PolicyController extends Controller
     {
         try {
             $policies = Policy::where('is_active', true)
-                ->select('type', 'title', 'meta_title', 'meta_description', 'updated_at')
+                ->select('id', 'type', 'title', 'meta_title', 'meta_description', 'updated_at')
                 ->orderBy('type')
                 ->get();
+
+            // Group policies by type for better organization
+            $groupedPolicies = $policies->groupBy('type');
 
             return response()->json([
                 'status' => true,
                 'message' => 'Policies retrieved successfully',
-                'data' => $policies
+                'data' => [
+                    'policies' => $policies,
+                    'grouped_policies' => $groupedPolicies,
+                    'total_count' => $policies->count()
+                ]
             ]);
 
         } catch (\Exception $e) {
@@ -40,6 +47,16 @@ class PolicyController extends Controller
     public function show($type)
     {
         try {
+            // Validate policy type
+            $validTypes = Policy::getTypes();
+            if (!array_key_exists($type, $validTypes)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid policy type',
+                    'valid_types' => array_keys($validTypes)
+                ], 400);
+            }
+
             $policy = Policy::where('type', $type)
                 ->where('is_active', true)
                 ->first();
@@ -47,7 +64,7 @@ class PolicyController extends Controller
             if (!$policy) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Policy not found',
+                    'message' => 'Policy not found or inactive',
                 ], 404);
             }
 
@@ -55,12 +72,16 @@ class PolicyController extends Controller
                 'status' => true,
                 'message' => 'Policy retrieved successfully',
                 'data' => [
+                    'id' => $policy->id,
                     'type' => $policy->type,
+                    'type_label' => $policy->type_label,
                     'title' => $policy->title,
                     'content' => $policy->content,
                     'meta_title' => $policy->meta_title,
                     'meta_description' => $policy->meta_description,
-                    'last_updated' => $policy->updated_at->format('Y-m-d H:i:s')
+                    'is_active' => $policy->is_active,
+                    'last_updated' => $policy->updated_at->format('Y-m-d H:i:s'),
+                    'created_at' => $policy->created_at->format('Y-m-d H:i:s')
                 ]
             ]);
 
@@ -127,5 +148,31 @@ class PolicyController extends Controller
     public function cancellation()
     {
         return $this->show('cancellation');
+    }
+
+    /**
+     * Get all available policy types
+     */
+    public function types()
+    {
+        try {
+            $types = Policy::getTypes();
+            
+            return response()->json([
+                'status' => true,
+                'message' => 'Policy types retrieved successfully',
+                'data' => [
+                    'types' => $types,
+                    'total_types' => count($types)
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong!',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 } 

@@ -36,10 +36,12 @@
                                 <td class="text-nowrap">
                                     <span class="badge bg-info badge-sm">Ready</span>
                                 </td>
-                                <td class="text-nowrap small">{{ $order->created_at->format('M d, Y H:i') }}</td>
+                                <td class="text-nowrap small">
+                                    {{ optional($order->created_at)->format('M d, Y H:i') ?? 'N/A' }}
+                                </td>
                                 <td class="text-nowrap">
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-outline-primary btn-sm">View</a>
+                                        <a href="{{ route('admin.orders.show', $order->id) }}" class=" btn-sm me-3"></a>
                                         <button type="button" class="btn btn-outline-success btn-sm" onclick="updateStatus({{ $order->id }}, 'dispatched')">Dispatch</button>
                                     </div>
                                 </td>

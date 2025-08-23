@@ -49,8 +49,19 @@
                                         <label class="form-check-label" for="is_active">Active Status</label>
                                     </div>
                                 </div>
+                                <!-- featured  -->
+                               
 
-
+                                        <div class="col-md-4 mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="featured"
+                                                name="featured" value="1"
+                                                {{ old('featured') ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold" for="featured">
+                                                <i class="fas fa-gem text-info me-1"></i>Featured 
+                                            </label>
+                                        </div>
+                                    </div>
                                 @if (isset($boxes) && $boxes->count() > 0)
                                     <div class="mb-4">
                                         <label class="form-label fw-bold fs-6 text-primary">Associated Boxes</label>

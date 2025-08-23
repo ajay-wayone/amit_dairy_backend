@@ -46,10 +46,16 @@
                                 <td>{{ Str::limit($contact->subject ?? 'N/A', 30) }}</td>
                                 <td>{{ Str::limit($contact->message ?? 'N/A', 50) }}</td>
                                 <td>
-                                    <span class="badge bg-{{ $contact->is_read ? 'success' : 'warning' }}">
-                                        {{ $contact->is_read ? 'Read' : 'Unread' }}
-                                    </span>
-                                </td>
+                        @if($contact->status === 'new')
+                            <span class="badge bg-warning">Unread</span>
+                        @elseif($contact->status === 'read')
+                            <span class="badge bg-success">Read</span>
+                        @elseif($contact->status === 'replied')
+                            <span class="badge bg-info">Replied</span>
+                        @elseif($contact->status === 'closed')
+                            <span class="badge bg-danger">Closed</span>
+                        @endif
+                    </td>
                                 <td>{{ $contact->created_at->format('M d, Y H:i') }}</td>
                                 <td>
                                     <div class="btn-group" role="group">

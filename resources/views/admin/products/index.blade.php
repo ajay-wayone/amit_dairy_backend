@@ -3,6 +3,7 @@
 @section('title', 'Products - Admin Dashboard')
 
 @section('content')
+
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -36,35 +37,39 @@
                 </div>
                 <div class="card-body">
                     <!-- Search and Filters -->
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <div class="search-box">
-                                <input type="text" class="form-control" id="searchInput"
-                                    placeholder="Search products...">
-                                <i class="ri-search-line search-icon"></i>
+                    <form id="filterForm">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="search-box">
+                                    <input type="text" class="form-control" id="searchInput" name="search"
+                                        placeholder="Search products..." value="{{ request('search') }}">
+                                    <i class="ri-search-line search-icon"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="categoryFilter" name="category_id">
+                                    <option value="">All Categories</option>
+                                    @foreach ($categories ?? [] as $category)
+                                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                            {{ $category->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="statusFilter" name="status">
+                                    <option value="">All Status</option>
+                                    <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Active</option>
+                                    <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactive</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-secondary w-100" id="clearFilters">
+                                    <i class="ri-refresh-line"></i> Clear
+                                </button>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="categoryFilter">
-                                <option value="">All Categories</option>
-                                @foreach ($categories ?? [] as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="statusFilter">
-                                <option value="">All Status</option>
-                                <option value="1">Active</option>
-                                <option value="0">Inactive</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-secondary w-100" id="clearFilters">
-                                <i class="ri-refresh-line"></i> Clear
-                            </button>
-                        </div>
-                    </div>
+                    </form>
 
                     <!-- Products Table -->
                     <div class="table-responsive">
@@ -74,11 +79,9 @@
                     </div>
 
                 </div>
-
             </div>
         </div>
     </div>
-
 @endsection
 
 @push('styles')
@@ -106,12 +109,6 @@
             text-align: center;
             transition: all 0.3s ease;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-
-        .pagination .page-link:hover {
-            background-color: #f5f6f8;
-            border-color: #d8dbe0;
-            transform: translateY(-1px);
         }
 
         .pagination .page-item.active .page-link {
@@ -177,17 +174,16 @@
         .search-box {
             position: relative;
         }
-
+        .search-box .form-control {
+            padding-right: 40px;
+        }
         .search-box .search-icon {
             position: absolute;
             right: 13px;
             top: 50%;
             transform: translateY(-50%);
             color: #98a6ad;
-        }
-
-        .search-box .form-control {
-            padding-right: 40px;
+            pointer-events: none;
         }
 
         .product-image {
@@ -245,90 +241,119 @@
 
             // AJAX Search and Filters
             function performSearch() {
-                const searchTerm = $('#searchInput').val();
-                const categoryId = $('#categoryFilter').val();
-                const status = $('#statusFilter').val();
-
+                const formData = $('#filterForm').serialize();
+                
                 $.ajax({
                     url: '{{ route('admin.products.index') }}',
                     type: 'GET',
-                    data: {
-                        search: searchTerm,
-                        category_id: categoryId,
-                        status: status
-                    },
+                    data: formData,
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    beforeSend: function() {
+                        // Show loading indicator
+                        $('#productsTable').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
                     },
                     success: function(response) {
                         $('#productsTable').html(response.html);
                         if (response.pagination) {
                             $('.pagination-container').html(response.pagination);
                         }
+                        
+                        // Update URL without reloading
+                        const params = new URLSearchParams(formData).toString();
+                        const newUrl = '{{ route('admin.products.index') }}' + (params ? '?' + params : '');
+                        window.history.pushState({}, '', newUrl);
                     },
-                    error: function() {
+                    error: function(xhr) {
                         console.log('Search failed');
+                        $('#productsTable').html('<div class="alert alert-danger">Failed to load products. Please try again.</div>');
                     }
                 });
             }
 
+            // Debounced search input
             $('#searchInput').on('input', function() {
                 clearTimeout(searchTimer);
                 searchTimer = setTimeout(performSearch, 500);
             });
 
+            // Immediate filter changes
             $('#categoryFilter, #statusFilter').on('change', function() {
                 performSearch();
             });
 
+            // Clear filters
             $('#clearFilters').on('click', function() {
-                $('#searchInput').val('');
-                $('#categoryFilter').val('');
-                $('#statusFilter').val('');
+                $('#filterForm')[0].reset();
                 performSearch();
             });
 
             // Toggle Status
-            $(document).on('click', '.toggle-status', function() {
-                const productId = $(this).data('id');
-                const button = $(this);
+      $(document).on('click', '.toggle-status', function(e) {
+    e.preventDefault();
+    const button = $(this);
+    const productId = button.data('id');
+    
+    // Show loading state
+    const originalHtml = button.html();
+    button.html('<i class="ri-loader-4-line spin"></i>');
+    button.prop('disabled', true);
 
-                $.ajax({
-                    url: `/admin/products/${productId}/toggle-status`,
-                    type: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            if (response.is_active) {
-                                button.removeClass('btn-warning').addClass('btn-success');
-                                button.html('<i class="ri-check-line"></i> Active');
-                            } else {
-                                button.removeClass('btn-success').addClass('btn-warning');
-                                button.html('<i class="ri-close-line"></i> Inactive');
-                            }
-
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: response.message,
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                        }
-                    },
-                    error: function() {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Failed to update status'
-                        });
-                    }
-                });
-            });
-
-            // Toggle Featured
+    $.ajax({
+        url: `/admin/products/${productId}/toggle-status`,
+        type: 'POST',
+        data: {
+            _token: '{{ csrf_token() }}',
+            _method: 'POST'
+        },
+        success: function(response) {
+            if (response.success) {
+                // Update button appearance
+                button.toggleClass('btn-success btn-warning');
+                button.html(response.status ? 
+                    ' Active' : 
+                    'Inactive');
+                
+                // Show success notification
+                Toastify({
+                    text: response.message,
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#28a745",
+                }).showToast();
+            } else {
+                button.html(originalHtml);
+                Toastify({
+                    text: response.message || 'Status update failed',
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#dc3545",
+                }).showToast();
+            }
+        },
+        error: function(xhr) {
+            console.error('Status toggle error:', xhr.responseText);
+            button.html(originalHtml);
+            Toastify({
+                text: "Network error. Please try again.",
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#dc3545",
+            }).showToast();
+        },
+        complete: function() {
+            button.prop('disabled', false);
+        }
+    });
+});
+     // Toggle Featured
             $(document).on('click', '.toggle-featured', function() {
                 const productId = $(this).data('id');
                 const button = $(this);
@@ -342,12 +367,10 @@
                     success: function(response) {
                         if (response.success) {
                             if (response.is_featured) {
-                                button.removeClass('btn-outline-warning').addClass(
-                                    'btn-warning');
+                                button.removeClass('btn-outline-warning').addClass('btn-warning');
                                 button.html('<i class="ri-star-fill"></i> Featured');
                             } else {
-                                button.removeClass('btn-warning').addClass(
-                                    'btn-outline-warning');
+                                button.removeClass('btn-warning').addClass('btn-outline-warning');
                                 button.html('<i class="ri-star-line"></i> Not Featured');
                             }
 
@@ -408,8 +431,7 @@
                 });
             });
 
-            // Pagination
-            // Enhanced Pagination with Loading State
+            // Pagination with AJAX
             $(document).on('click', '.pagination a', function(e) {
                 e.preventDefault();
 
@@ -418,19 +440,12 @@
                 paginationContainer.addClass('pagination-loading');
 
                 const page = $(this).attr('href').split('page=')[1];
-                const searchTerm = $('#searchInput').val();
-                const categoryId = $('#categoryFilter').val();
-                const status = $('#statusFilter').val();
+                const formData = $('#filterForm').serialize() + '&page=' + page;
 
                 $.ajax({
                     url: '{{ route('admin.products.index') }}',
                     type: 'GET',
-                    data: {
-                        page: page,
-                        search: searchTerm,
-                        category_id: categoryId,
-                        status: status
-                    },
+                    data: formData,
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
                     },
@@ -440,12 +455,19 @@
                         $('html, body').animate({
                             scrollTop: $('#productsTable').offset().top - 100
                         }, 300);
+                        
+                        // Update URL without reloading
+                        const params = new URLSearchParams(formData).toString();
+                        const newUrl = '{{ route('admin.products.index') }}' + (params ? '?' + params : '');
+                        window.history.pushState({}, '', newUrl);
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', status, error);
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'Failed to load products'
+                            text: 'Failed to load products. Please try again later.',
+                            confirmButtonColor: '#d33'
                         });
                     },
                     complete: function() {

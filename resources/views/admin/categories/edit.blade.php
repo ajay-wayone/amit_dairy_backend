@@ -78,7 +78,16 @@
                                                 @endforeach
                                             </div>
                                         </div>
-
+                                <!-- featurd  -->
+                     <div class="col-md-4 mb-3">
+                    <div class="form-check form-switch">
+                        <input  class="form-check-input"  type="checkbox"  id="featured" name="featured"  value="1"
+                            {{ old('featured', $category->featured) == 1 ? 'checked' : '' }} >
+                        <label class="form-check-label fw-bold" for="featured">
+                            <i class="fas fa-gem text-info me-1"></i> Featured
+                        </label>
+                    </div>
+                </div>
                                         @error('box_ids_json')
                                             <div class="text-danger mt-2 small">{{ $message }}</div>
                                         @enderror

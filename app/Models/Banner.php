@@ -10,19 +10,35 @@ class Banner extends Model
     use HasFactory;
 
     protected $fillable = [
-        'page_name',
         'image',
         'is_active',
-        'sort_order',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'sort_order' => 'integer',
     ];
 
-    public function isActive()
+    /**
+     * Scope for active banners only
+     */
+    public function scopeActive($query)
     {
-        return $this->is_active;
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Check if banner is active
+     */
+    public function isActive(): bool
+    {
+        return (bool) $this->is_active;
+    }
+
+    /**
+     * Get full image URL
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image ? asset('storage/' . $this->image) : null;
     }
 }

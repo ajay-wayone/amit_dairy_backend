@@ -1,8 +1,12 @@
 <?php
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\OrderItem;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory; // import User model
 use Illuminate\Database\Eloquent\Model;
+
+// import OrderItem model
 
 class Order extends Model
 {
@@ -10,8 +14,8 @@ class Order extends Model
 
     protected $fillable = [
         'order_code',
-        'customer_id',
-        'customer_name',
+        'user_id',       // Use user_id instead of customer_id
+        'customer_name', // You may keep these fields if you store customer info separately
         'customer_email',
         'customer_phone',
         'delivery_address',
@@ -28,7 +32,6 @@ class Order extends Model
         'delivery_date',
         'delivered_at',
         'number_of_boxes',
-        'user_id',
         'cart_data',
         'address_details',
         'house_block',
@@ -50,11 +53,13 @@ class Order extends Model
         'cart_data'       => 'array', // Cast JSON to array
     ];
 
-    public function customer()
+    // Relation to User model using user_id foreign key
+    public function user()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
+    // Relation to OrderItems
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);

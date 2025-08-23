@@ -62,7 +62,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Status</label>
                                     <p>
-                                        @if ($product->is_active)
+                                        @if ($product->status)
                                             <span class="badge bg-success">Active</span>
                                         @else
                                             <span class="badge bg-danger">Inactive</span>

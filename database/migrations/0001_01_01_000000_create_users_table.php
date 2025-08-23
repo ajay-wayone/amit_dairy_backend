@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('phone')->unique();
             $table->string('password');
             $table->string('otp')->nullable();
+            $table->string('purpose')->nullable();
             $table->boolean('is_verified')->default(false);
             $table->timestamps();
         });

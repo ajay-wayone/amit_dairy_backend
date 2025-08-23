@@ -12,14 +12,17 @@ use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\ForgotPasswordController;
 use App\Http\Controllers\Admin\NewsletterController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PolicyController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\TestimonialController;
-use App\Http\Controllers\Admin\PolicyController;
+use App\Http\Controllers\Admin\WebsiteBannerController;
+use App\Http\Controllers\Admin\WebsiteSettingsController;
+use App\Http\Controllers\Admin\BlockedSlotController;
 use Illuminate\Support\Facades\Route;
 
-// Admin Routes
+// Admin Routes 
 Route::prefix('admin')->name('admin.')->group(function () {
     // Guest routes (login)
     Route::middleware('guest:admin')->group(function () {
@@ -52,29 +55,33 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Products
         Route::get('products/get-subcategories', [ProductController::class, 'getSubcategories'])->name('products.get-subcategories');
 
-// Products - Main routes
-        Route::resource('products', ProductController::class);
-        Route::post('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
-        Route::post('products/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
+            // Products - Main routes
+             Route::resource('products', ProductController::class);
+            Route::post('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('admin.products.toggle-status');
+            Route::post('products/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
 
         // Orders
-        Route::resource('orders', OrderController::class);
-        Route::get('orders/new', [OrderController::class, 'newOrders'])->name('orders.new');
+    
         Route::get('orders/ready', [OrderController::class, 'readyOrders'])->name('orders.ready');
         Route::get('orders/dispatched', [OrderController::class, 'dispatchedOrders'])->name('orders.dispatched');
         Route::get('orders/delivered', [OrderController::class, 'deliveredOrders'])->name('orders.delivered');
         Route::get('orders/cancelled', [OrderController::class, 'cancelledOrders'])->name('orders.cancelled');
         Route::post('orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
-
+        Route::resource('orders', OrderController::class);
         // Customers
         Route::resource('customers', CustomerController::class);
         Route::get('customers/search', [CustomerController::class, 'search'])->name('customers.search');
         Route::post('customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
 
-        // Banners
-        Route::resource('banners', BannerController::class);
-        Route::post('banners/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('banners.toggle-status');
+        
 
+    // Website Banners
+    Route::resource('banners', BannerController::class);
+    Route::post('banners/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('banners.toggle-status');
+
+
+Route::resource('website-banners', WebsiteBannerController::class);
+        Route::post('website-banners/{website_banner}/toggle-status', [WebsiteBannerController::class, 'toggleStatus'])->name('website-banners.toggle-status');
         // Boxes
         Route::resource('boxes', BoxController::class);
         Route::post('boxes/{box}/toggle-status', [BoxController::class, 'toggleStatus'])->name('boxes.toggle-status');
@@ -84,7 +91,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('testimonials/{testimonial}/toggle-status', [TestimonialController::class, 'toggleStatus'])->name('testimonials.toggle-status');
 
         // Subscriptions
-        Route::resource('subscriptions', SubscriptionController::class);
+        Route::resource('subscriptions', SubscriptionController::class)->except(['show']);
         Route::get('subscriptions/list', [SubscriptionController::class, 'list'])->name('subscriptions.list');
         Route::post('subscriptions/{subscription}/toggle-status', [SubscriptionController::class, 'toggleStatus'])->name('subscriptions.toggle-status');
 
@@ -93,8 +100,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('faqs/{faq}/toggle-status', [FaqController::class, 'toggleStatus'])->name('faqs.toggle-status');
 
         // Newsletters
-        Route::resource('newsletters', NewsletterController::class);
         Route::post('newsletters/{newsletter}/toggle-status', [NewsletterController::class, 'toggleStatus'])->name('newsletters.toggle-status');
+        Route::resource('newsletters', NewsletterController::class);
 
         // Contact Enquiries
         Route::resource('contacts', ContactController::class)->except(['create', 'store']);
@@ -104,22 +111,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('delivery-locations', DeliveryLocationController::class);
         Route::post('delivery-locations/{location}/toggle-status', [DeliveryLocationController::class, 'toggleStatus'])->name('delivery-locations.toggle-status');
 
-                // Policies
+        // Policies
         Route::resource('policies', PolicyController::class);
         Route::post('policies/{policy}/toggle-status', [PolicyController::class, 'toggleStatus'])->name('policies.toggle-status');
-
-        Route::prefix('admin/policies')->name('policies.')->group(function () {
-            Route::get('{type}', [PolicyController::class, 'show'])->name('show');
-            Route::put('{type}', [PolicyController::class, 'update'])->name('update');
-        });
         // Contact Details
+
         Route::get('contact-details', function () {
-            return view('admin.contact-details.index');
-        })->name('contact-details');
-        Route::put('contact-details', function () {
-            // TODO: Implement contact details update
-            return redirect()->back()->with('success', 'Settings updated successfully!');
-        })->name('contact-details.update');
+            $id = \App\Models\WebsiteSetting::first()?->id ?? 1;
+            return redirect()->route('admin.contact-details.edit', $id);})->name('contact-details.index');
+            // Contact Details API 
+            Route::get('contact-details/{id}', [WebsiteSettingsController::class, 'show'])->name('contact-details.show');
+
+        Route::get('contact-details/{id}/edit', [WebsiteSettingsController::class, 'edit'])->name('contact-details.edit');
+        Route::put('contact-details/{id}', [WebsiteSettingsController::class, 'update'])->name('contact-details.update');
 
         // Change Credentials
         Route::get('change-credentials', function () {
@@ -131,8 +135,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         })->name('change-credentials.update');
     });
 });
-
-// Redirect root to admin login
+// block dates routs
+    Route::get('blocked-slots', [BlockedSlotController::class, 'index'])->name('block.index');
+    Route::post('blocked-slots', [BlockedSlotController::class, 'store'])->name('block.store');
+    Route::delete('blocked-slots/{blockedSlot}', [BlockedSlotController::class, 'destroy'])->name('block.destroy');
 Route::get('/', function () {
     return redirect()->route('admin.login');
 });

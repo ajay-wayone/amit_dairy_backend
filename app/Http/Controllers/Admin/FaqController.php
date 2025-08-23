@@ -8,11 +8,23 @@ use Illuminate\Http\Request;
 
 class FaqController extends Controller
 {
-    public function index()
-    {
-        $faqs = Faq::orderBy('sort_order')->paginate(10);
-        return view('admin.faqs.index', compact('faqs'));
+  public function index(Request $request)
+{
+    $query = Faq::orderBy('sort_order');
+
+    if ($request->filled('search')) {
+        $search = $request->input('search');
+        $query->where(function($q) use ($search) {
+            $q->where('question', 'like', "%{$search}%")
+              ->orWhere('answer', 'like', "%{$search}%");
+        });
     }
+
+    $faqs = $query->paginate(10)->appends($request->only('search'));
+
+    return view('admin.faqs.index', compact('faqs'));
+}
+
 
     public function create()
     {

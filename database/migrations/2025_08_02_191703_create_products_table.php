@@ -13,13 +13,12 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('product_code')->unique();
+            // $table->string('product_code')->unique();
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->foreignId('subcategory_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->text('short_description')->nullable();
             $table->decimal('price', 10, 2);
             $table->decimal('discount_price', 10, 2)->nullable();
             $table->string('product_image')->nullable();
@@ -31,7 +30,7 @@ return new class extends Migration
             $table->boolean('best_seller')->default(false);
             $table->boolean('specialities')->default(false); // Can change to text if storing multiple specialities
             $table->boolean('status')->default(true);
-            $table->string('tags')->nullable(); // Can use JSON or TEXT if multiple tags
+            $table->string('featured_type')->nullable(); 
             $table->timestamps();
 
         });

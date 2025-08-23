@@ -65,42 +65,52 @@ class BoxController extends Controller
     }
 
     // Update box
-    public function update(Request $request, $id)
-    {
-        $box = Box::findOrFail($id);
+   public function update(Request $request, $id)
+{
+    $box = Box::findOrFail($id);
 
-        // Validation (all fields optional)
-        $validated = $request->validate([
-            'box_name'  => 'nullable|string|max:255',
-            'box_price' => 'nullable|numeric',
-            'box_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
-        ]);
+    // Validation
+    $validated = $request->validate([
+        'box_name'  => 'nullable|string|max:255',
+        'box_price' => 'nullable|numeric',
+        'box_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
+        'is_active' => 'nullable|boolean',
+    ]);
 
-        // Update fields only if provided
-        if ($request->filled('box_name')) {
-            $box->box_name = $request->box_name;
-        }
-
-        if ($request->filled('box_price')) {
-            $box->box_price = $request->box_price;
-        }
-
-        $box->is_active = $request->has('is_active');
-
-        // Replace image
-        if ($request->hasFile('box_image')) {
-            if ($box->box_image && Storage::disk('public')->exists($box->box_image)) {
-                Storage::disk('public')->delete($box->box_image);
-            }
-
-            $imagePath = $request->file('box_image')->store('box_images', 'public');
-            $box->box_image = $imagePath;
-        }
-
-        $box->save();
-
-        return redirect()->route('admin.boxes.index')->with('success', 'Box updated successfully.');
+    // Update fields if provided
+    if ($request->filled('box_name')) {
+        $box->box_name = $request->box_name;
     }
+
+    if ($request->filled('box_price')) {
+        $box->box_price = $request->box_price;
+    }
+
+    // Checkbox handling
+    $box->is_active = $request->has('is_active');
+
+    // Image replacement
+    if ($request->hasFile('box_image')) {
+        // Delete old image if exists
+        if ($box->box_image && Storage::disk('public')->exists($box->box_image)) {
+            Storage::disk('public')->delete($box->box_image);
+        }
+
+        // Store new image with unique name
+        $imageName = 'box_' . uniqid() . '.' . $request->file('box_image')->getClientOriginalExtension();
+        $imagePath = $request->file('box_image')->storeAs('box_images', $imageName, 'public');
+
+        // Update DB
+        $box->box_image = $imagePath;
+    }
+
+    // Save box
+    $box->save();
+
+    return redirect()->route('admin.boxes.index')
+        ->with('success', 'Box updated successfully.');
+}
+
 
     // Delete box and image
     public function destroy(Box $box)

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Validator;
 class ProductController extends Controller
 {
     /**
-     * Get all products with pagination
+     * Get all products (NO pagination)
      */
     public function index(Request $request)
     {
@@ -20,22 +20,22 @@ class ProductController extends Controller
             $query = Product::with(['category', 'subcategory'])
                 ->where('status', true);
 
-            // Filter by category
+            if ($request->has('id')) {
+                $query->where('id', 'like', '%' . $request->id . '%');
+            }
+
             if ($request->has('category_id')) {
                 $query->where('category_id', $request->category_id);
             }
 
-            // Filter by subcategory
             if ($request->has('subcategory_id')) {
                 $query->where('subcategory_id', $request->subcategory_id);
             }
 
-            // Search by name
             if ($request->has('search')) {
                 $query->where('name', 'like', '%' . $request->search . '%');
             }
 
-            // Filter by price range
             if ($request->has('min_price')) {
                 $query->where('price', '>=', $request->min_price);
             }
@@ -43,48 +43,35 @@ class ProductController extends Controller
                 $query->where('price', '<=', $request->max_price);
             }
 
-            // Filter by availability
             if ($request->has('in_stock')) {
                 $query->where('stock_quantity', '>', 0);
             }
 
-            // Filter by featured products
             if ($request->has('featured')) {
                 $query->where('best_seller', true);
             }
 
-            // Filter by special products
             if ($request->has('special')) {
                 $query->where('specialities', true);
             }
 
-            // Sort products
             $sortBy = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
-            
-            // Validate sort fields
+
             $allowedSortFields = ['name', 'price', 'created_at', 'updated_at'];
             if (!in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'created_at';
             }
-            
+
             $query->orderBy($sortBy, $sortOrder);
 
-            $perPage = $request->get('per_page', 10);
-            $products = $query->paginate($perPage);
+            // 👇 Pagination हटाया → अब सारे products लाएँगे
+            $products = $query->get();
 
             return response()->json([
                 'status' => true,
                 'message' => 'Products retrieved successfully',
-                'data' => [
-                    'products' => $products->items(),
-                    'pagination' => [
-                        'current_page' => $products->currentPage(),
-                        'last_page' => $products->lastPage(),
-                        'per_page' => $products->perPage(),
-                        'total' => $products->total(),
-                    ]
-                ]
+                'data' => $products
             ]);
 
         } catch (\Exception $e) {
@@ -196,7 +183,6 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            // Get related products
             $relatedProducts = Product::with(['category', 'subcategory'])
                 ->where('status', true)
                 ->where('category_id', $product->category_id)
@@ -204,7 +190,6 @@ class ProductController extends Controller
                 ->limit(5)
                 ->get();
 
-            // Get similar products (same subcategory)
             $similarProducts = Product::with(['category', 'subcategory'])
                 ->where('status', true)
                 ->where('subcategory_id', $product->subcategory_id)
@@ -232,7 +217,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Search products
+     * Search products (NO pagination)
      */
     public function search(Request $request)
     {
@@ -249,30 +234,18 @@ class ProductController extends Controller
                 ], 422);
             }
 
-            $query = Product::with(['category', 'subcategory'])
+            $products = Product::with(['category', 'subcategory'])
                 ->where('status', true)
                 ->where(function($q) use ($request) {
                     $q->where('name', 'like', '%' . $request->query . '%')
-                      ->orWhere('description', 'like', '%' . $request->query . '%')
-                      ->orWhere('tags', 'like', '%' . $request->query . '%');
-                });
-
-            $perPage = $request->get('per_page', 10);
-            $products = $query->paginate($perPage);
+                      ->orWhere('description', 'like', '%' . $request->query . '%');
+                })
+                ->get(); // 👈 paginate हटाया
 
             return response()->json([
                 'status' => true,
                 'message' => 'Search results retrieved successfully',
-                'data' => [
-                    'products' => $products->items(),
-                    'pagination' => [
-                        'current_page' => $products->currentPage(),
-                        'last_page' => $products->lastPage(),
-                        'per_page' => $products->perPage(),
-                        'total' => $products->total(),
-                    ],
-                    'search_query' => $request->query
-                ]
+                'data' => $products
             ]);
 
         } catch (\Exception $e) {
@@ -285,125 +258,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Get product filters
-     */
-    public function filters()
-    {
-        try {
-            $filters = [
-                'categories' => Category::where('is_active', true)
-                    ->withCount(['products' => function($query) {
-                        $query->where('status', true);
-                    }])
-                    ->orderBy('category_name')
-                    ->get(),
-                'price_ranges' => [
-                    ['min' => 0, 'max' => 100, 'label' => 'Under ₹100'],
-                    ['min' => 100, 'max' => 500, 'label' => '₹100 - ₹500'],
-                    ['min' => 500, 'max' => 1000, 'label' => '₹500 - ₹1000'],
-                    ['min' => 1000, 'max' => 5000, 'label' => '₹1000 - ₹5000'],
-                    ['min' => 5000, 'max' => null, 'label' => 'Above ₹5000'],
-                ],
-                'availability' => [
-                    ['value' => 'in_stock', 'label' => 'In Stock'],
-                    ['value' => 'out_of_stock', 'label' => 'Out of Stock'],
-                ],
-                'sort_options' => [
-                    ['value' => 'name_asc', 'label' => 'Name A-Z'],
-                    ['value' => 'name_desc', 'label' => 'Name Z-A'],
-                    ['value' => 'price_asc', 'label' => 'Price Low to High'],
-                    ['value' => 'price_desc', 'label' => 'Price High to Low'],
-                    ['value' => 'created_at_desc', 'label' => 'Newest First'],
-                    ['value' => 'created_at_asc', 'label' => 'Oldest First'],
-                ]
-            ];
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Product filters retrieved successfully',
-                'data' => $filters
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Get categories
-     */
-    public function categories()
-    {
-        try {
-            $categories = Category::where('is_active', true)
-                ->withCount(['products' => function($query) {
-                    $query->where('status', true);
-                }])
-                ->orderBy('category_name')
-                ->get();
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Categories retrieved successfully',
-                'data' => $categories
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Get subcategories by category
-     */
-    public function subcategories(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'category_id' => 'required|exists:categories,id'
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
-
-            $subcategories = Subcategory::where('category_id', $request->category_id)
-                ->where('is_active', true)
-                ->withCount(['products' => function($query) {
-                    $query->where('status', true);
-                }])
-                ->orderBy('subcategory_name')
-                ->get();
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Subcategories retrieved successfully',
-                'data' => $subcategories
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Get products by category
+     * Get products by category (NO pagination)
      */
     public function productsByCategory($categoryId)
     {
@@ -423,20 +278,14 @@ class ProductController extends Controller
                 ->where('status', true)
                 ->where('category_id', $categoryId)
                 ->orderBy('created_at', 'desc')
-                ->paginate(10);
+                ->get(); // 👈 paginate हटाया
 
             return response()->json([
                 'status' => true,
                 'message' => 'Products retrieved successfully',
                 'data' => [
                     'category' => $category,
-                    'products' => $products->items(),
-                    'pagination' => [
-                        'current_page' => $products->currentPage(),
-                        'last_page' => $products->lastPage(),
-                        'per_page' => $products->perPage(),
-                        'total' => $products->total(),
-                    ]
+                    'products' => $products
                 ]
             ]);
 
@@ -450,7 +299,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Get products by subcategory
+     * Get products by subcategory (NO pagination)
      */
     public function productsBySubcategory($subcategoryId)
     {
@@ -471,20 +320,14 @@ class ProductController extends Controller
                 ->where('status', true)
                 ->where('subcategory_id', $subcategoryId)
                 ->orderBy('created_at', 'desc')
-                ->paginate(10);
+                ->get(); // 👈 paginate हटाया
 
             return response()->json([
                 'status' => true,
                 'message' => 'Products retrieved successfully',
                 'data' => [
                     'subcategory' => $subcategory,
-                    'products' => $products->items(),
-                    'pagination' => [
-                        'current_page' => $products->currentPage(),
-                        'last_page' => $products->lastPage(),
-                        'per_page' => $products->perPage(),
-                        'total' => $products->total(),
-                    ]
+                    'products' => $products
                 ]
             ]);
 
@@ -496,4 +339,6 @@ class ProductController extends Controller
             ], 500);
         }
     }
-} 
+
+
+}

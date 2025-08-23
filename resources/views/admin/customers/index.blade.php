@@ -16,11 +16,7 @@
                             <input type="text" id="searchInput" class="form-control" placeholder="Search customers..."
                                 autocomplete="off">
                         </div>
-                        <div class="col-md-6 text-end">
-                            <a href="{{ route('admin.customers.create') }}" class="btn btn-success btn-sm">
-                                <i class="ri-add-line me-1"></i> Add Customer
-                            </a>
-                        </div>
+
                     </div>
 
                     <!-- Customers Table -->
@@ -30,7 +26,6 @@
                                 <tr>
                                     <th class="text-nowrap">Sr.n</th>
                                     <th class="text-nowrap">Name</th>
-
                                     <th class="text-nowrap">Email</th>
                                     <th class="text-nowrap">Phone</th>
                                     <th class="text-nowrap">Status</th>

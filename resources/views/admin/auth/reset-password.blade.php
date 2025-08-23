@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <title>Reset Password - Admin Dashboard</title>
@@ -28,7 +29,8 @@
                                         <div class="text-center">
                                             <div>
                                                 <a href="{{ route('admin.login') }}" class="logo">
-                                                    <img src="{{ asset('assets/assets/images/logo.webp') }}" height="50" alt="logo">
+                                                    <img src="{{ asset('assets/assets/images/logo.webp') }}"
+                                                        height="150" alt="logo">
                                                 </a>
                                             </div>
                                             <h4 class="font-size-18 mt-4">Reset Password</h4>
@@ -36,17 +38,20 @@
                                         </div>
 
                                         <div class="p-2 mt-5">
-                                            @if(session('success'))
+                                            @if (session('success'))
                                                 <div class="alert alert-success">{{ session('success') }}</div>
                                             @endif
 
-                                            <form class="form-horizontal" method="POST" action="{{ route('admin.reset-password') }}">
+                                            <form class="form-horizontal" method="POST"
+                                                action="{{ route('admin.reset-password') }}">
                                                 @csrf
                                                 <div class="form-group auth-form-group-custom mb-4">
                                                     <i class="ri-lock-line auti-custom-input-icon"></i>
                                                     <label for="password">New Password</label>
-                                                    <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                                           id="password" name="password" placeholder="Enter new password" required>
+                                                    <input type="password"
+                                                        class="form-control @error('password') is-invalid @enderror"
+                                                        id="password" name="password" placeholder="Enter new password"
+                                                        required>
                                                     @error('password')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -55,13 +60,14 @@
                                                 <div class="form-group auth-form-group-custom mb-4">
                                                     <i class="ri-lock-line auti-custom-input-icon"></i>
                                                     <label for="password_confirmation">Confirm Password</label>
-                                                    <input type="password" class="form-control" 
-                                                           id="password_confirmation" name="password_confirmation" 
-                                                           placeholder="Confirm new password" required>
+                                                    <input type="password" class="form-control"
+                                                        id="password_confirmation" name="password_confirmation"
+                                                        placeholder="Confirm new password" required>
                                                 </div>
 
                                                 <div class="mt-4 text-center">
-                                                    <button class="btn btn-primary w-md waves-effect waves-light" type="submit">
+                                                    <button class="btn btn-primary w-md waves-effect waves-light"
+                                                        type="submit">
                                                         Reset Password
                                                     </button>
                                                 </div>
@@ -80,9 +86,25 @@
                     </div>
                 </div>
                 <div class="col-lg-8">
-                    <div class="authentication-bg">
-                        <div class="bg-overlay"></div>
+                    <div class="bg-overlay"
+                        style="
+background: linear-gradient(
+        to bottom,
+        #FF9933 33%,   
+        #FFFFFF 33% 66%,  
+        #138808 66%
+    );                        background-size: cover;
+                        background-position: center;
+                        opacity: 0.7;
+                        position: absolute;
+                        height: 100%;
+                        width: 100%;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;">
                     </div>
+
                 </div>
             </div>
         </div>
@@ -95,4 +117,5 @@
     <script src="{{ asset('assets/assets/libs/node-waves/waves.min.js') }}"></script>
     <script src="{{ asset('assets/assets/js/app.js') }}"></script>
 </body>
-</html> 
+
+</html>

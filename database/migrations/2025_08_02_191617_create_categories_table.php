@@ -12,9 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('categories', function (Blueprint $table) {
-            $table->id();
+           $table->id();
             $table->string('name');
-            $table->json('box_ids_json')->nullable(); // Remove ->unique()
+            $table->boolean('featured')->default(true);
+            $table->json('box_ids_json')->nullable(); // Removed ->unique() as you intended
             $table->string('category_image')->nullable();
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);

@@ -30,9 +30,11 @@ class Policy extends Model
     const TYPE_PRIVACY = 'privacy';
     const TYPE_REFUND = 'refund';
     const TYPE_RETURN = 'return';
-    const TYPE_DISCLAIMER = 'disclaimer';
+    const TYPE_CONTACT = 'contact';
     const TYPE_SHIPPING = 'shipping';
     const TYPE_CANCELLATION = 'cancellation';
+    const TYPE_ABOUT = 'about';
+    
 
     public static function getTypes()
     {
@@ -41,9 +43,11 @@ class Policy extends Model
             self::TYPE_PRIVACY => 'Privacy Policy',
             self::TYPE_REFUND => 'Refund Policy',
             self::TYPE_RETURN => 'Return Policy',
-            self::TYPE_DISCLAIMER => 'Disclaimer',
+            self::TYPE_CONTACT => 'contact',
             self::TYPE_SHIPPING => 'Shipping Policy',
-            self::TYPE_CANCELLATION => 'Cancellation Policy'
+            self::TYPE_CANCELLATION => 'Cancellation Policy',
+            self::TYPE_ABOUT => 'about'
+
         ];
     }
 

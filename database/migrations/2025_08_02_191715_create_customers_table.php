@@ -18,7 +18,9 @@ return new class extends Migration
             $table->string('phone')->unique();
             $table->string('password')->nullable();
             $table->text('address')->nullable();
-          
+            $table->string('city')->nullable();
+            $table->string('state')->nullable();
+            $table->string('pincode')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('email_verified')->default(false);
             $table->boolean('phone_verified')->default(false);

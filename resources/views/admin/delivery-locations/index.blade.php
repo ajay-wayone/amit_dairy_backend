@@ -31,7 +31,7 @@
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>Sr.n</th>
                                     <th>Location Name</th>
                                     <th>Pincodde</th>
                                     <th>Status</th>
@@ -40,9 +40,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($deliveryLocations as $location)
+                                @forelse($deliveryLocations as $key=> $location)
                                     <tr>
-                                        <td>{{ $location->id }}</td>
+                                        <td>{{ $key + 1 }}</td>
                                         <td>{{ Str::limit($location->location, 100) }}</td>
                                         <td>{{ Str::limit($location->pincode) }}</td>
 

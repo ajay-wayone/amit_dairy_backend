@@ -39,7 +39,14 @@
                                 <td class="text-nowrap small">{{ $order->delivered_at ? $order->delivered_at->format('M d, Y H:i') : 'N/A' }}</td>
                                 <td class="text-nowrap">
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ route('admin.orders.show', $order->id) }}" class="btn btn-outline-primary btn-sm">View</a>
+                                <form action="{{ route('admin.orders.destroy', $order->id) }}" method="POST" style="display:inline-block;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-outline-danger btn-sm"
+                                        onclick="return confirm('Are you sure you want to delete this order?')">
+                                        Delete
+                                    </button>
+                                </form>
                                     </div>
                                 </td>
                             </tr>

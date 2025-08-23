@@ -77,26 +77,28 @@ class TestimonialController extends Controller
         'sort_order' => 'nullable|integer',
     ]);
 
-    // Set the correct value for is_active (checkbox-like behavior)
+    // Set is_active properly (checkbox)
     $validated['is_active'] = $request->has('is_active') ? 1 : 0;
 
-    // Handle image upload
+    // Image upload handling
     if ($request->hasFile('customer_image')) {
-        // Delete old image if it exists
+        // Delete old image if exists
         if ($testimonial->customer_image && \Storage::disk('public')->exists($testimonial->customer_image)) {
             \Storage::disk('public')->delete($testimonial->customer_image);
         }
 
-        // Store new image
-        $validated['customer_image'] = $request->file('customer_image')->store('testimonials', 'public');
+        // Store new image with unique name
+        $imageName = 'testimonial_' . uniqid() . '.' . $request->file('customer_image')->getClientOriginalExtension();
+        $validated['customer_image'] = $request->file('customer_image')->storeAs('testimonials', $imageName, 'public');
     }
 
-    // Update the testimonial
+    // Update testimonial in DB
     $testimonial->update($validated);
 
     return redirect()->route('admin.testimonials.index')
         ->with('success', 'Testimonial updated successfully.');
 }
+
 
 public function destroy(Testimonial $testimonial)
 {

@@ -25,7 +25,7 @@ class OrderController extends Controller
 
             // Filter by status
             if ($request->has('status')) {
-                $query->where('status', $request->status);
+                $query->where('order_status', $request->status);
             }
 
             // Sort orders
@@ -117,17 +117,19 @@ class OrderController extends Controller
                 // Create order
                 $order = Order::create([
                     'user_id' => $user->id,
-                    'order_number' => 'ORD-' . time() . '-' . $user->id,
+                    'order_code' => 'ORD-' . time() . '-' . $user->id,
+                    'customer_name' => $user->full_name,
+                    'customer_email' => $user->email,
+                    'customer_phone' => $user->phone,
+                    'delivery_address' => $request->shipping_address,
+                    'delivery_city' => $request->shipping_city,
+                    'delivery_state' => $request->shipping_state,
+                    'delivery_pincode' => $request->shipping_pincode,
                     'total_amount' => $total,
-                    'shipping_address' => $request->shipping_address,
-                    'shipping_city' => $request->shipping_city,
-                    'shipping_state' => $request->shipping_state,
-                    'shipping_pincode' => $request->shipping_pincode,
-                    'shipping_phone' => $request->shipping_phone,
                     'payment_method' => $request->payment_method,
                     'payment_status' => $request->payment_method === 'cod' ? 'pending' : 'pending',
-                    'status' => 'pending',
-                    'notes' => $request->notes
+                    'order_status' => 'pending',
+                    'order_notes' => $request->notes
                 ]);
 
                 // Create order items
@@ -151,7 +153,7 @@ class OrderController extends Controller
                     'message' => 'Order created successfully',
                     'data' => [
                         'order' => $order,
-                        'order_number' => $order->order_number
+                        'order_code' => $order->order_code
                     ]
                 ], 201);
 
@@ -224,7 +226,7 @@ class OrderController extends Controller
             }
 
             // Check if order can be cancelled
-            if (!in_array($order->status, ['pending', 'confirmed'])) {
+            if (!in_array($order->order_status, ['pending', 'confirmed'])) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Order cannot be cancelled at this stage',
@@ -232,7 +234,7 @@ class OrderController extends Controller
             }
 
             $order->update([
-                'status' => 'cancelled',
+                'order_status' => 'cancelled',
                 'cancelled_at' => now()
             ]);
 
@@ -260,7 +262,7 @@ class OrderController extends Controller
             $user = $request->user();
 
             $order = Order::with(['items.product', 'items.product.category', 'items.product.subcategory'])
-                ->where('order_number', $orderNumber)
+                ->where('order_code', $orderNumber)
                 ->where('user_id', $user->id)
                 ->first();
 
@@ -296,12 +298,12 @@ class OrderController extends Controller
 
             $stats = [
                 'total_orders' => Order::where('user_id', $user->id)->count(),
-                'pending_orders' => Order::where('user_id', $user->id)->where('status', 'pending')->count(),
-                'confirmed_orders' => Order::where('user_id', $user->id)->where('status', 'confirmed')->count(),
-                'shipped_orders' => Order::where('user_id', $user->id)->where('status', 'shipped')->count(),
-                'delivered_orders' => Order::where('user_id', $user->id)->where('status', 'delivered')->count(),
-                'cancelled_orders' => Order::where('user_id', $user->id)->where('status', 'cancelled')->count(),
-                'total_spent' => Order::where('user_id', $user->id)->where('status', 'delivered')->sum('total_amount'),
+                'pending_orders' => Order::where('user_id', $user->id)->where('order_status', 'pending')->count(),
+                'confirmed_orders' => Order::where('user_id', $user->id)->where('order_status', 'confirmed')->count(),
+                'shipped_orders' => Order::where('user_id', $user->id)->where('order_status', 'shipped')->count(),
+                'delivered_orders' => Order::where('user_id', $user->id)->where('order_status', 'delivered')->count(),
+                'cancelled_orders' => Order::where('user_id', $user->id)->where('order_status', 'cancelled')->count(),
+                'total_spent' => Order::where('user_id', $user->id)->where('order_status', 'delivered')->sum('total_amount'),
             ];
 
             return response()->json([
@@ -340,19 +342,115 @@ class OrderController extends Controller
             }
 
             $tracking = [
-                'order_number' => $order->order_number,
-                'status' => $order->status,
+                'order_code' => $order->order_code,
+                'status' => $order->order_status,
                 'created_at' => $order->created_at,
                 'updated_at' => $order->updated_at,
-                'estimated_delivery' => $order->estimated_delivery,
-                'tracking_number' => $order->tracking_number,
-                'tracking_url' => $order->tracking_url,
+                'delivery_date' => $order->delivery_date,
+                'delivered_at' => $order->delivered_at,
             ];
 
             return response()->json([
                 'status' => true,
                 'message' => 'Order tracking information retrieved successfully',
                 'data' => $tracking
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong!',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user's subscription orders
+     */
+    public function subscriptionOrders(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            $query = Order::with(['items.product'])
+                ->where('user_id', $user->id)
+                ->where('order_status', '!=', 'cancelled');
+
+            // Filter by subscription type if needed
+            if ($request->has('subscription_type')) {
+                $query->where('subscription_type', $request->subscription_type);
+            }
+
+            // Sort orders
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortOrder = $request->get('sort_order', 'desc');
+            $query->orderBy($sortBy, $sortOrder);
+
+            $perPage = $request->get('per_page', 10);
+            $orders = $query->paginate($perPage);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Subscription orders retrieved successfully',
+                'data' => [
+                    'orders' => $orders->items(),
+                    'pagination' => [
+                        'current_page' => $orders->currentPage(),
+                        'last_page' => $orders->lastPage(),
+                        'per_page' => $orders->perPage(),
+                        'total' => $orders->total(),
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong!',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get new orders (for admin)
+     */
+    public function newOrders(Request $request)
+    {
+        try {
+            $query = Order::with(['user', 'items.product'])
+                ->where('order_status', 'pending')
+                ->orWhere('order_status', 'confirmed');
+
+            // Filter by date range
+            if ($request->has('from_date')) {
+                $query->whereDate('created_at', '>=', $request->from_date);
+            }
+            if ($request->has('to_date')) {
+                $query->whereDate('created_at', '<=', $request->to_date);
+            }
+
+            // Sort orders
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortOrder = $request->get('sort_order', 'desc');
+            $query->orderBy($sortBy, $sortOrder);
+
+            $perPage = $request->get('per_page', 20);
+            $orders = $query->paginate($perPage);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'New orders retrieved successfully',
+                'data' => [
+                    'orders' => $orders->items(),
+                    'pagination' => [
+                        'current_page' => $orders->currentPage(),
+                        'last_page' => $orders->lastPage(),
+                        'per_page' => $orders->perPage(),
+                        'total' => $orders->total(),
+                    ]
+                ]
             ]);
 
         } catch (\Exception $e) {

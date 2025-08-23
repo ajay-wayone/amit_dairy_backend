@@ -15,6 +15,7 @@ class Category extends Model
         'box_ids_json',
         'category_image',
         'is_active',
+        'featured',
         'sort_order'
     ];
 
@@ -24,7 +25,6 @@ class Category extends Model
         'box_ids_json' => 'array'
     ];
 
-    protected $appends = ['image_url'];
 
     // ✅ Relationships
     public function subcategories()

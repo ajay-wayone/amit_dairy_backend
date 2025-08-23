@@ -30,7 +30,7 @@
                                             <div>
                                                 <a href="{{ route('admin.login') }}" class="logo">
                                                     <img src="{{ asset('assets/assets/images/logo.webp') }}"
-                                                        height="50" alt="logo">
+                                                        height="150" alt="logo">
                                                 </a>
                                             </div>
                                             <h4 class="font-size-18 mt-4">Forgot Password</h4>
@@ -61,16 +61,14 @@
                                                 </div>
 
                                                 <div class="mt-4 text-center">
-                                                    <button
-                                                        class="btn btn-outline-warning w-md waves-effect waves-light"
+                                                    <button class="btn btn-outline-danger w-md waves-effect waves-light"
                                                         type="submit">
                                                         Send OTP
                                                     </button>
                                                 </div>
 
                                                 <div class="mt-4 text-center">
-                                                    <a href="{{ route('admin.login') }}"
-                                                        class="text-muted ">
+                                                    <a href="{{ route('admin.login') }}" class="text-muted ">
                                                         <i class="mdi mdi-arrow-left me-1"></i> Back to Login
                                                     </a>
                                                 </div>
@@ -84,8 +82,13 @@
                 </div>
                 <div class="col-lg-8">
                     <div class="bg-overlay"
-                        style="
-    background-image: url('{{ asset('assets/assets/images/small/img-5.jpg') }}');
+                    style="
+    background: linear-gradient(
+        to bottom,
+        #FF9933 33%,   
+        #FFFFFF 33% 66%,  
+        #138808 66%
+    );
     background-size: cover;
     background-position: center;
     opacity: 0.7;
@@ -95,8 +98,9 @@
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-">
+    bottom: 0;">
+</style>
+
                     </div>
 
                 </div>

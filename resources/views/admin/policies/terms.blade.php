@@ -10,7 +10,7 @@
                 <h4 class="card-title mb-0">Terms & Conditions</h4>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.policies.terms.update') }}">
+                <form method="POST" action="{{ route('admin.policies.terms') }}">
                     @csrf
                     @method('PUT')
                     

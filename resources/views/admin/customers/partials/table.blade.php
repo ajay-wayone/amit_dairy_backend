@@ -1,40 +1,50 @@
-@forelse($customers as $key=> $customer)
+@forelse($users as $key => $user)
     <tr>
-        <td>{{ $customer->$key + 1 }}</td>
+        <td>{{ $key + 1 }}</td>
 
         <td>
-            <a href="{{ route('admin.customers.show', $customer->id) }}" class="text-info" title="View">
-                {{ $customer->name }}
-            </a>
+
+            {{ $user->full_name }}
+
         </td>
 
-
-        <td>{{ $customer->email }}</td>
-        <td>{{ $customer->phone ?? 'N/A' }}</td>
+        <td>{{ $user->email }}</td>
+        <td>{{ $user->phone ?? 'N/A' }}</td>
         <td>
-            <span class="badge bg-{{ $customer->is_active ? 'success' : 'danger' }} badge-sm">
-                {{ $customer->is_active ? 'Active' : 'Inactive' }}
+            @php
+                $status = 'Active'; // default
+                $badge = 'success'; // default green
+
+                if (isset($user->is_active)) {
+                    if ($user->is_active == 1) {
+                        $status = 'Active';
+                        $badge = 'success';
+                    } elseif ($user->is_active == 0) {
+                        $status = 'Inactive';
+                        $badge = 'danger';
+                    }
+                }
+            @endphp
+
+            <span class="badge bg-{{ $badge }} badge-sm">
+                {{ $status }}
             </span>
-        </td>
-        <td>{{ $customer->created_at->format('M d, Y') }}</td>
-        <td>
-            <div class="btn-group btn-group-sm" role="group">
-                <a href="{{ route('admin.customers.edit', $customer->id) }}" class="btn btn-outline-warning btn-sm me-3"
-                    title="Edit">
-                    <i class="ri-edit-line"></i>
-                </a>
 
-                <button type="button" class="btn btn-outline-danger btn-sm delete-item" data-id="{{ $customer->id }}"
-                    data-name="{{ $customer->name }}" data-type="customer"
-                    data-url="{{ route('admin.customers.destroy', $customer->id) }}" title="Delete">
+        </td>
+        <td>{{ $user->created_at->format('M d, Y') }}</td>
+        <td>
+            <div class="d-flex justify-content-center btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-danger btn-sm delete-item" data-id="{{ $user->id }}"
+                    data-name="{{ $user->full_name }}" data-type="user"
+                    data-url="{{ route('admin.customers.destroy', $user->id) }}" title="Delete">
                     <i class="ri-delete-bin-line"></i>
                 </button>
             </div>
-        </td>
 
+        </td>
     </tr>
 @empty
     <tr>
-        <td colspan="7" class="text-center text-muted">No customers found.</td>
+        <td colspan="7" class="text-center text-muted">No users found.</td>
     </tr>
 @endforelse

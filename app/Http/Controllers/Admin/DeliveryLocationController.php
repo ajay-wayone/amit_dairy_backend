@@ -43,19 +43,23 @@ class DeliveryLocationController extends Controller
         return view('admin.delivery-locations.edit', compact('deliveryLocation'));
     }
 
-    public function update(Request $request, DeliveryLocation $deliveryLocation)
-    {
-        $request->validate([
-            'location' => 'required|string',
-            'pincode' => 'nullable|string|max:20',
-            'is_active' => 'required|boolean',
-        ]);
+   public function update(Request $request, DeliveryLocation $deliveryLocation)
+{
+    $request->validate([
+        'location' => 'required|string',
+        'pincode' => 'nullable|string|max:20',
+        'is_active' => 'required|in:0,1', // use in:0,1 instead of boolean
+    ]);
 
-        $deliveryLocation->update($request->all());
+    // Explicitly assign fields to avoid mass-assignment issues
+    $deliveryLocation->location = $request->location;
+    $deliveryLocation->pincode = $request->pincode;
+    $deliveryLocation->is_active = (int) $request->is_active; // cast to integer
+    $deliveryLocation->save();
 
-        return redirect()->route('admin.delivery-locations.index')
-            ->with('success', 'Delivery location updated successfully!');
-    }
+    return redirect()->route('admin.delivery-locations.index')
+                     ->with('success', 'Delivery location updated successfully!');
+}
 
     public function destroy(DeliveryLocation $deliveryLocation)
     {

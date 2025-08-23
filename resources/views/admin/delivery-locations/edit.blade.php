@@ -17,14 +17,14 @@
                     <div class="row g-3">
                        <div class="col-12">
                             <label for="address" class="form-label small">Location *</label>
-                            <textarea name="address" id="address" class="form-control form-control-sm @error('address') is-invalid @enderror" rows="3" required>{{ old('address', $deliveryLocation->location) }}</textarea>
-                            @error('address')<div class="invalid-feedback small">{{ $message }}</div>@enderror
+                            <textarea name="location" id="location" class="form-control form-control-sm @error('location') is-invalid @enderror" rows="3" required>{{ old('location', $deliveryLocation->location) }}</textarea>
+                            @error('location')<div class="invalid-feedback small">{{ $message }}</div>@enderror
                         </div>
                         
                         <div class="col-md-6">
-                            <label for="phone" class="form-label small">Pincode</label>
-                            <input type="text" name="phone" id="phone" class="form-control form-control-sm @error('phone') is-invalid @enderror" value="{{ old('phone', $deliveryLocation->pincode) }}">
-                            @error('phone')<div class="invalid-feedback small">{{ $message }}</div>@enderror
+                            <label for="pincode" class="form-label small">Pincode</label>
+                            <input type="text" name="pincode" id="pincode" class="form-control form-control-sm @error('pincode') is-invalid @enderror" value="{{ old('pincode', $deliveryLocation->pincode) }}">
+                            @error('pincode')<div class="invalid-feedback small">{{ $message }}</div>@enderror
                         </div>
                         
                        

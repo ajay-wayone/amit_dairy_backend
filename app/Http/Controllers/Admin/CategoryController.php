@@ -49,6 +49,7 @@ class CategoryController extends Controller
         'box_ids_json.*' => 'exists:boxes,id',
         'category_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:20248',
         'is_active' => 'nullable|boolean',
+        'featured' => 'nullable|boolean',
         'sort_order' => 'nullable|integer|min:0',
     ]);
 
@@ -67,6 +68,7 @@ class CategoryController extends Controller
             'description' => $request->description,
             'category_image'       => $imagePath,
             'box_ids_json'   => json_encode($request->box_ids_json),
+            'featured'    => $request->has('featured') ? 1 : 0, 
             'is_active'   => $request->has('is_active'),
             'sort_order'  => $request->sort_order ?? 0,
         ]);
@@ -82,68 +84,86 @@ class CategoryController extends Controller
     }
 }
 
- 
+ public function edit(Category $category)
+{
+    $boxes = Box::where('is_active', true)->orderBy('box_name')->get();
+    $selectedBoxes = $category->boxes->pluck('id')->toArray();
+
+    return view('admin.categories.edit', compact('category', 'boxes', 'selectedBoxes'));
+}
 
 
-    public function edit(Category $category)
-    {
-        $boxes = Box::where('is_active', true)->orderBy('box_name')->get();
-        $selectedBoxes = $category->boxes->pluck('id')->toArray();
-        return view('admin.categories.edit', compact('category', 'boxes', 'selectedBoxes'));
-    }
 public function update(Request $request, Category $category)
 {
-    $request->validate([
-        'name' => 'sometimes|string|max:255',
-        'description' => 'nullable|string',
-        'category_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:20248',
-        'is_active' => 'nullable|boolean',
-        'sort_order' => 'nullable|integer|min:0',
-        'box_ids_json' => 'nullable|array',
-        'box_ids_json.*' => 'exists:boxes,id',
-    ]);
+   $request->validate([
+    'name' => 'sometimes|string|max:255',
+    'description' => 'nullable|string',
+    'category_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:20248',
+    'is_active' => 'nullable|boolean',
+    'sort_order' => 'nullable|integer|min:0',
+    'box_ids_json' => 'nullable|array',
+    'box_ids_json.*' => 'exists:boxes,id',
+    'featured' => 'nullable|boolean', // validation rule
+]);
+
+$data['featured'] = $request->has('featured') ? 1 : 0; // actual assignment
+
 
     try {
         $data = [];
 
+        // Name & Slug
         if ($request->filled('name')) {
             $data['name'] = $request->name;
-            $data['slug'] = Str::slug($request->name);
+            $data['slug'] = \Str::slug($request->name);
         }
 
+        // Description
         if ($request->filled('description')) {
             $data['description'] = $request->description;
         }
 
+        // Active & Sort Order
         $data['is_active'] = $request->has('is_active');
+       $data['featured']  = $request->has('featured') ? 1 : 0; 
         $data['sort_order'] = $request->sort_order ?? 0;
 
+        // Image Upload
         if ($request->hasFile('category_image')) {
-            if ($category->category_image && Storage::disk('public')->exists($category->category_image)) {
-                Storage::disk('public')->delete($category->category_image);
+            $image = $request->file('category_image');
+
+            // Purani image delete karna
+            if ($category->category_image && \Storage::disk('public')->exists($category->category_image)) {
+                \Storage::disk('public')->delete($category->category_image);
             }
 
-            $image = $request->file('category_image');
             $imageName = 'cat_' . uniqid() . '.' . $image->getClientOriginalExtension();
-            $data['category_image'] = $image->storeAs('categories', $imageName, 'public');
+            $path = $image->storeAs('categories', $imageName, 'public');
+
+            $data['category_image'] = $path;
         }
 
+        // Boxes JSON
         if ($request->has('box_ids_json')) {
             $data['box_ids_json'] = json_encode($request->box_ids_json);
         }
 
+        // Update Category
         $category->update($data);
 
+        // Sync boxes (many-to-many)
         if ($request->has('box_ids_json')) {
             $category->boxes()->sync($request->box_ids_json);
         }
 
         return redirect()->route('admin.categories.index')
             ->with('success', 'Category updated successfully!');
+
     } catch (\Exception $e) {
         return back()->withInput()->with('error', 'Failed to update category: ' . $e->getMessage());
     }
 }
+
 
   public function destroy(Category $category)
 {
@@ -175,11 +195,7 @@ public function update(Request $request, Category $category)
         return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
     }
 }
-public function show($id)
-{
-    $category = Category::findOrFail($id);
-    return view('admin.categories.show', compact('category'));
-}
+
 
 
 

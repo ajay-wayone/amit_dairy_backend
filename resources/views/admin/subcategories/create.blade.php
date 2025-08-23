@@ -112,7 +112,7 @@
                                         <i class="ri-arrow-left-line align-bottom me-1"></i> Cancel
                                     </a>
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="ri-save-line align-bottom me-1"></i> Create Category
+                                        <i class="ri-save-line align-bottom me-1"></i> Create Subcategory
                                     </button>
                                 </div>
                             </div>

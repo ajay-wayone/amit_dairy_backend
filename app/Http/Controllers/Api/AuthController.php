@@ -1,14 +1,11 @@
 <?php
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -25,6 +22,7 @@ class AuthController extends Controller
                 'email'     => 'required|email|unique:users,email',
                 'phone'     => 'required|unique:users,phone',
                 'password'  => 'required|string|min:6|confirmed',
+                'purpose'   => 'required|in:signup,login,resetpassword,password',
             ]);
 
             if ($validator->fails()) {
@@ -44,33 +42,22 @@ class AuthController extends Controller
                 'email'       => $request->email,
                 'phone'       => $request->phone,
                 'password'    => Hash::make($request->password),
+                'purpose'     => $request->purpose,
                 'otp'         => $otp,
                 'is_verified' => 0,
             ]);
 
-            // Step 4: Send OTP via Email
-            try {
-                Mail::send('emails.otp', ['otp' => $otp, 'user' => $user], function ($message) use ($user) {
-                    $message->to($user->email)
-                        ->subject('Verify your account - OTP');
-                });
-            } catch (\Exception $e) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Signup successful but failed to send OTP email.',
-                    'error'   => $e->getMessage(),
-                ], 500);
-            }
-
-            // Step 5: Return response
+            // Step 4: Return response with OTP directly
             return response()->json([
                 'status'  => true,
-                'message' => 'Signup successful. OTP has been sent to your email.',
+                'message' => 'Signup successful. Use OTP to verify your account.',
                 'data'    => [
                     'id'        => $user->id,
                     'full_name' => $user->full_name,
                     'email'     => $user->email,
                     'phone'     => $user->phone,
+                    'purpose'   => $user->purpose,
+                    'otp'       => $otp, // OTP comes in api
                 ],
             ], 201);
 
@@ -90,8 +77,9 @@ class AuthController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'email' => 'required|email|exists:users,email',
-                'otp'   => 'required|digits:6',
+                'email'   => 'required|email|exists:users,email',
+                'otp'     => 'required|digits:6',
+                'purpose' => 'required|in:signup,login,resetpassword,forgetpassword',
             ]);
 
             if ($validator->fails()) {
@@ -104,39 +92,83 @@ class AuthController extends Controller
 
             $user = User::where('email', $request->email)
                 ->where('otp', $request->otp)
+                ->where('purpose', $request->purpose)
                 ->first();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status'  => false,
-                    'message' => 'Invalid OTP',
+                    'message' => 'Invalid OTP or purpose',
                 ], 400);
             }
 
-            $user->is_verified = 1;
-            $user->otp         = null;
-            $user->email_verified_at = now();
-            $user->save();
+            // ✅ Clear OTP & Purpose
+            $user->otp     = null;
+            $user->purpose = null;
 
-            // Generate token
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // ✅ Handle according to purpose
+            switch ($request->purpose) {
+                case 'signup':
+                    $user->is_verified       = 1;
+                    $user->email_verified_at = now();
+                    $user->save();
+                    $token = $user->createToken('auth_token')->plainTextToken;
 
-            return response()->json([
-                'status'  => true,
-                'message' => 'OTP verified successfully',
-                'data'    => [
-                    'id'        => $user->id,
-                    'full_name' => $user->full_name,
-                    'email'     => $user->email,
-                    'phone'     => $user->phone,
-                    'token'     => $token,
-                ],
-            ]);
+                    return response()->json([
+                        'status'  => true,
+                        'message' => 'Signup verified successfully',
+                        'data'    => [
+                            'id'        => $user->id,
+                            'full_name' => $user->full_name,
+                            'email'     => $user->email,
+                            'token'     => $token,
+                        ],
+                    ]);
+
+                case 'login':
+                    $user->save();
+                    $token = $user->createToken('auth_token')->plainTextToken;
+
+                    return response()->json([
+                        'status'  => true,
+                        'message' => 'Login verified successfully',
+                        'data'    => [
+                            'id'        => $user->id,
+                            'full_name' => $user->full_name,
+                            'email'     => $user->email,
+                            'token'     => $token,
+                        ],
+                    ]);
+
+                case 'resetpassword':
+                    $user->save();
+                    // ⚠️ Generate temporary token for password reset
+                    $resetToken = Str::random(60);
+
+                    return response()->json([
+                        'status'      => true,
+                        'message'     => 'OTP verified, proceed to reset password',
+                        'reset_token' => $resetToken,
+                    ]);
+
+                case 'forgetpassword':
+                    $user->save();
+                    return response()->json([
+                        'status'  => true,
+                        'message' => 'OTP verified, you can set a new password now',
+                    ]);
+
+                default:
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'Invalid purpose',
+                    ], 400);
+            }
 
         } catch (\Exception $e) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Something went wrong!',
+                'message' => 'Something went wrong! otp',
                 'error'   => $e->getMessage(),
             ], 500);
         }
@@ -163,32 +195,30 @@ class AuthController extends Controller
 
             $user = User::where('email', $request->email)->first();
 
-            if (!$user || !Hash::check($request->password, $user->password)) {
+            if (! $user || ! Hash::check($request->password, $user->password)) {
                 return response()->json([
                     'status'  => false,
                     'message' => 'Invalid credentials',
                 ], 401);
             }
 
-            if (!$user->is_verified) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Please verify your email first',
-                ], 403);
-            }
+            // ✅ Generate OTP for login purpose
+            $otp = rand(100000, 999999);
+            $user->update([
+                'otp'     => $otp,
+                'purpose' => 'login',
+            ]);
 
-            // Generate token
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // 📩 Yaha tum OTP email/SMS kar sakte ho
+            // Mail::to($user->email)->send(new LoginOtpMail($otp));
 
             return response()->json([
                 'status'  => true,
-                'message' => 'Login successful',
+                'message' => 'OTP sent for login verification',
                 'data'    => [
-                    'id'        => $user->id,
-                    'full_name' => $user->full_name,
-                    'email'     => $user->email,
-                    'phone'     => $user->phone,
-                    'token'     => $token,
+                    'email'   => $user->email,
+                    'purpose' => $user->purpose,
+                    'otp'     => $otp, 
                 ],
             ]);
 
@@ -204,11 +234,14 @@ class AuthController extends Controller
     /**
      * Forgot Password API
      */
+
     public function forgotPassword(Request $request)
     {
         try {
+            // Step 1: Validation
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email|exists:users,email',
+                'phone' => 'required|exists:users,phone',
             ]);
 
             if ($validator->fails()) {
@@ -219,29 +252,32 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            $user = User::where('email', $request->email)->first();
-            $otp = rand(100000, 999999);
+            // Step 2: Get user
+            $user = User::where('email', $request->email)
+                ->where('phone', $request->phone)
+                ->first();
 
-            $user->otp = $otp;
-            $user->save();
-
-            // Send OTP via Email
-            try {
-                Mail::send('emails.forgot-password', ['otp' => $otp, 'user' => $user], function ($message) use ($user) {
-                    $message->to($user->email)
-                        ->subject('Reset Password - OTP');
-                });
-            } catch (\Exception $e) {
+            if (! $user) {
                 return response()->json([
                     'status'  => false,
-                    'message' => 'Failed to send OTP email.',
-                    'error'   => $e->getMessage(),
-                ], 500);
+                    'message' => 'User not found with provided email & phone.',
+                ], 404);
             }
 
+            // Step 3: Generate OTP
+            $otp = rand(100000, 999999);
+
+            // Step 4: Save OTP & purpose in users table
+            $user->otp     = $otp;
+            $user->purpose = 'forgetpassword';
+            $user->save();
+
+            // Step 5: Response with OTP
             return response()->json([
                 'status'  => true,
-                'message' => 'OTP has been sent to your email for password reset.',
+                'message' => 'OTP generated successfully. It will expire in 10 minutes.',
+                'otp'     => $otp, // Remove in production
+                'purpose' => 'forgetpassword',
             ]);
 
         } catch (\Exception $e) {
@@ -259,6 +295,7 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         try {
+            // Step 1: Validate request
             $validator = Validator::make($request->all(), [
                 'email'    => 'required|email|exists:users,email',
                 'otp'      => 'required|digits:6',
@@ -273,19 +310,29 @@ class AuthController extends Controller
                 ], 422);
             }
 
+            // Step 2: Find user by email + OTP
             $user = User::where('email', $request->email)
                 ->where('otp', $request->otp)
                 ->first();
 
-            if (!$user) {
+            if (! $user) {
                 return response()->json([
                     'status'  => false,
                     'message' => 'Invalid OTP',
                 ], 400);
             }
 
+            //OPTIONAL: Check OTP expiry if otp_created_at is stored
+            if (now()->diffInMinutes($user->otp_created_at) > 5) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'OTP expired',
+                ], 400);
+            }
+
+            // Step 3: Update password
             $user->password = Hash::make($request->password);
-            $user->otp = null;
+            $user->otp      = null;
             $user->save();
 
             return response()->json([
@@ -336,12 +383,12 @@ class AuthController extends Controller
                 'status'  => true,
                 'message' => 'Profile retrieved successfully',
                 'data'    => [
-                    'id'        => $user->id,
-                    'full_name' => $user->full_name,
-                    'email'     => $user->email,
-                    'phone'     => $user->phone,
+                    'id'          => $user->id,
+                    'full_name'   => $user->full_name,
+                    'email'       => $user->email,
+                    'phone'       => $user->phone,
                     'is_verified' => $user->is_verified,
-                    'created_at' => $user->created_at,
+                    'created_at'  => $user->created_at,
                 ],
             ]);
 
@@ -396,4 +443,63 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Create Password API
+     */
+    public function createPassword(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email'    => 'required|email|exists:users,email',
+                'password' => 'required|string|min:6|confirmed',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Validation failed',
+                    'errors'  => $validator->errors(),
+                ], 422);
+            }
+
+            $user = User::where('email', $request->email)
+                ->where(function ($query) use ($request) {
+                    $query->where('otp', $request->otp)
+                        ->orWhere('purpose', $request->purpose);
+                })
+                ->first();
+
+            if (! $user) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Invalid OTP or email',
+                ], 400);
+            }
+
+            // Update password and clear OTP
+            $user->password = Hash::make($request->password);
+            $user->otp      = null;
+            $user->purpose  = null;
+            $user->save();
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Password created successfully',
+                'data'    => [
+                    'id'        => $user->id,
+                    'full_name' => $user->full_name,
+                    'email'     => $user->email,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Something went wrong!',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

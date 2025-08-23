@@ -1,111 +1,125 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
-
+use App\Models\Usersubscriptions;
 use App\Http\Controllers\Controller;
-use App\Models\Subscription;
-use App\Models\Customer;
+use App\Models\subscription;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
-class SubscriptionController extends Controller
+class subscriptionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $subscriptions = Subscription::with('customer')->orderBy('created_at', 'desc')->paginate(15);
+        $search = $request->input('search');
+
+        $subscriptions = Subscription::when($search, function ($query, $search) {
+            return $query->where('plan_name', 'like', "%{$search}%");
+        })
+            ->orderBy('created_at', 'desc')
+            ->paginate(5);
+
+        // To preserve the search query in pagination links
+        $subscriptions->appends(['search' => $search]);
+
         return view('admin.subscriptions.index', compact('subscriptions'));
     }
+public function list()
+{
+    $subscriptions = Usersubscriptions::orderBy('created_at', 'desc')->get();
+    return view('admin.subscriptions.list', compact('subscriptions'));
+}
+
 
     public function create()
     {
-        $customers = Customer::where('is_active', true)->get();
-        return view('admin.subscriptions.create', compact('customers'));
+        return view('admin.subscriptions.create');
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'plan_name' => 'required|string|max:255',
+            'plan_name'   => 'required|string|max:255',
+            'valid_days'  => 'required|integer|min:1',
+            'amount'      => 'required|numeric|min:0',
+            'is_active'   => 'required|boolean',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:20248',
             'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'duration_days' => 'required|integer|min:1',
-            'start_date' => 'required|date',
-            'auto_renew' => 'boolean',
-            'notes' => 'nullable|string',
         ]);
 
-        $data = $request->all();
-        $data['subscription_code'] = 'SUB' . strtoupper(Str::random(8));
-        $data['end_date'] = \Carbon\Carbon::parse($request->start_date)->addDays($request->duration_days);
-        $data['auto_renew'] = $request->has('auto_renew');
+        try {
+            $data = $request->only(['plan_name', 'valid_days', 'amount', 'status', 'description']);
 
-        Subscription::create($data);
+            // Image Upload
+            if ($request->hasFile('image')) {
+                $image         = $request->file('image');
+                $filename      = 'subscription_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $data['image'] = $image->storeAs('subscriptions', $filename, 'public');
+            }
 
-        return redirect()->route('admin.subscriptions.index')
-            ->with('success', 'Subscription created successfully.');
+            subscription::create($data);
+
+            return redirect()->route('admin.subscriptions.index')->with('success', 'Subscription created successfully!');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Failed to create subscription: ' . $e->getMessage());
+        }
     }
 
-    public function show(Subscription $subscription)
+    public function edit(subscription $subscription)
     {
-        return view('admin.subscriptions.show', compact('subscription'));
+        return view('admin.subscriptions.edit', compact('subscription'));
     }
+public function update(Request $request, Subscription $subscription)
+{
+    $request->validate([
+        'plan_name'   => 'required|string|max:255',
+        'valid_days'  => 'required|integer|min:1',
+        'amount'      => 'required|numeric|min:0',
+        'is_active'   => 'required|boolean',
+        'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:20248',
+        'description' => 'nullable|string',
+    ]);
 
-    public function edit(Subscription $subscription)
-    {
-        $customers = Customer::where('is_active', true)->get();
-        return view('admin.subscriptions.edit', compact('subscription', 'customers'));
-    }
+    try {
+        // Prepare data
+        $data = $request->only(['plan_name', 'valid_days', 'amount', 'is_active', 'description']);
 
-    public function update(Request $request, Subscription $subscription)
-    {
-        $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'plan_name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'duration_days' => 'required|integer|min:1',
-            'start_date' => 'required|date',
-            'auto_renew' => 'boolean',
-            'notes' => 'nullable|string',
-        ]);
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($subscription->image && Storage::disk('public')->exists($subscription->image)) {
+                Storage::disk('public')->delete($subscription->image);
+            }
 
-        $data = $request->all();
-        $data['end_date'] = \Carbon\Carbon::parse($request->start_date)->addDays($request->duration_days);
-        $data['auto_renew'] = $request->has('auto_renew');
+            // Store new image with unique name
+            $image = $request->file('image');
+            $filename = 'subscription_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            $data['image'] = $image->storeAs('subscriptions', $filename, 'public');
+        }
 
+        // Update subscription
         $subscription->update($data);
 
         return redirect()->route('admin.subscriptions.index')
-            ->with('success', 'Subscription updated successfully.');
+            ->with('success', 'Subscription updated successfully!');
+    } catch (\Exception $e) {
+        return back()->withInput()
+            ->with('error', 'Failed to update subscription: ' . $e->getMessage());
     }
+}
 
-    public function destroy(Subscription $subscription)
+
+    public function destroy(subscription $subscription)
     {
-        $subscription->delete();
+        try {
+            if ($subscription->image && Storage::disk('public')->exists($subscription->image)) {
+                Storage::disk('public')->delete($subscription->image);
+            }
 
-        return redirect()->route('admin.subscriptions.index')
-            ->with('success', 'Subscription deleted successfully.');
-    }
+            $subscription->delete();
 
-    public function toggleStatus(Subscription $subscription)
-    {
-        $newStatus = $subscription->status === 'active' ? 'cancelled' : 'active';
-        $subscription->update(['status' => $newStatus]);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Subscription status updated successfully.',
-            'status' => $subscription->status
-        ]);
-    }
-
-    public function list()
-    {
-        $subscriptions = Subscription::with('customer')
-            ->where('status', 'active')
-            ->orderBy('end_date')
-            ->paginate(15);
-        return view('admin.subscriptions.list', compact('subscriptions'));
+            return redirect()->route('admin.subscriptions.index')->with('success', 'Subscription deleted successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to delete subscription: ' . $e->getMessage());
+        }
     }
 }

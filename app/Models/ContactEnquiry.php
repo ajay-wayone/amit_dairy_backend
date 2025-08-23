@@ -18,10 +18,13 @@ class ContactEnquiry extends Model
         'status',
     ];
 
-    protected $casts = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
+   protected $casts = [
+    'created_at' => 'datetime',
+    'updated_at' => 'datetime',
+    'read_at'    => 'datetime',
+    'replied_at' => 'datetime',
+];
+
 
     public function isRead()
     {

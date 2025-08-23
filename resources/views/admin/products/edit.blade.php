@@ -225,12 +225,22 @@
                             <!-- Active Status -->
                             <div class="col-md-6">
                                 <div class="form-check form-switch mt-3">
-                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
-                                        value="1" {{ old('is_active', $product->is_active) ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" id="status" name="status"
+                                        value="0" {{ old('status', $product->status) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="is_active">Active Status</label>
                                 </div>
                             </div>
-
+                                    <!-- best seller -->
+                                    <div class="col-md-4 mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="best_seller"
+                                                name="best_seller" value="1"
+                                                {{ old('best_seller',$product->best_seller) ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-bold" for="best_seller">
+                                                <i class="fas fa-star text-warning me-1"></i>Best Seller
+                                            </label>
+                                        </div>
+                                    </div>
                             <!-- Product Image -->
                             <div class="col-md-6">
                                 <label for="product_image" class="form-label">Product Image</label>
@@ -320,34 +330,33 @@
                 subcategorySelect.empty().append('<option value="">Loading...</option>');
 
                 if (categoryId) {
-                    $.ajax({
-                        url: "{{ route('admin.products.get-subcategories') }}",
-                        type: 'GET',
-                        data: {
-                            category_id: categoryId
-                        },
-                        success: function(data) {
-                            subcategorySelect.empty().append(
-                                '<option value="">Select Subcategory</option>');
-                            $.each(data, function(index, subcategory) {
-                                const selected = subcategory.id ==
-                                    currentSubcategoryId ? 'selected' : '';
-                                subcategorySelect.append(
-                                    $('<option></option>').val(subcategory.id).text(
-                                        subcategory.subcategory_name).prop(
-                                        'selected', selected)
-                                );
-                            });
-                        },
-                        error: function() {
-                            subcategorySelect.empty().append(
-                                '<option value="">Error loading subcategories</option>');
-                        }
-                    });
-                } else {
-                    subcategorySelect.empty().append('<option value="">Select Subcategory</option>');
+                   $('#category_id').on('change', function() {
+    var categoryId = $(this).val();
+
+    $.ajax({
+        url: "{{ route('admin.products.get-subcategories') }}",
+        type: 'GET',
+        data: { category_id: categoryId },
+        success: function(response) {
+            var subcategorySelect = $('#subcategory_id');
+            subcategorySelect.empty(); 
+
+            if(response.success && response.data.length > 0) {
+                subcategorySelect.append('<option value="">Select Subcategory</option>');
+                $.each(response.data, function(index, subcategory) {
+                    subcategorySelect.append(
+                        '<option value="'+subcategory.id+'">'+subcategory.subcategory_name+'</option>'
+                    );
+                });
+            } else {
+                subcategorySelect.append('<option value="">No Subcategories</option>');
+            }
+        },
+        error: function() {
+                    $('#subcategory_id').empty().append('<option value="">Error loading</option>');
                 }
             });
+        });
 
             // 🖼️ Image Preview
             $('#product_image').on('change', function() {

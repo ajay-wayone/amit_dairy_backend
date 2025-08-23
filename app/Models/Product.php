@@ -9,33 +9,38 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
+        'product_code',
         'category_id',
         'subcategory_id',
         'name',
         'slug',
         'description',
-        'quantity',
-        'unit',
-        'types',
+        'short_description',
         'price',
+        'discount_price',
+        'product_image',
+        'types',
         'weight',
         'weight_type',
-        'featured_type',
-        'discount_price',
-        'minimum_quantity',
+        'min_order',
         'max_order',
+        'best_seller',
+        'specialities',
         'featured_type',
-        'product_image',
-        'is_active',
+        'status',
+        'tags',
     ];
 
     protected $casts = [
         'price'            => 'decimal:2',
         'discount_price'   => 'decimal:2',
-        'quantity'         => 'decimal:2',
-        'minimum_quantity' => 'decimal:2',
+        'weight'           => 'decimal:2',
+        'min_order'        => 'integer',
+        'max_order'        => 'integer',
         'types'            => 'array',
-        'is_active'        => 'boolean',
+        'best_seller'      => 'boolean',
+        'specialities'     => 'boolean',
+        'status'           => 'boolean',
     ];
 
     public function category()

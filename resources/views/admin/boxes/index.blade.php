@@ -43,7 +43,7 @@
                             <tbody>
                                 @forelse($boxes as $key=> $box)
                                     <tr>
-                                        <td>{{ $box->$key + 1 }}</td>
+                                        <td>{{ $key + 1 }}</td>
                                         <td>
                                             @if ($box->box_image)
                                                 <img src="{{ asset('storage/' . $box->box_image) }}"
