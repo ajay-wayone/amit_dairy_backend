@@ -19,8 +19,8 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
-        'otp',              // OTP save karne ke liye
-        'purpose',          // Signup, login, resetpassword, password
+        'otp',
+        'purpose',
         'is_verified',
         'email_verified_at',
         'profile_image',
@@ -33,7 +33,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
-        'otp', // Agar API me OTP dikhana ho to yaha se hata sakte ho
+        'otp',
     ];
 
     /**
@@ -46,47 +46,35 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the user's orders.
+     * Relations
      */
     public function orders()
     {
         return $this->hasMany(Order::class);
     }
 
-    /**
-     * Get the user's active orders (not cancelled).
-     */
     public function activeOrders()
     {
         return $this->orders()->where('status', '!=', 'cancelled');
     }
 
-    /**
-     * Get the user's cart items.
-     */
     public function cartItems()
     {
         return $this->hasMany(Cart::class)->where('is_active', true);
     }
 
-    /**
-     * Get the user's wishlist items.
-     */
     public function wishlistItems()
     {
         return $this->hasMany(Wishlist::class)->where('is_active', true);
     }
 
-    /**
-     * Get the user's reviews.
-     */
     public function reviews()
     {
         return $this->hasMany(Review::class)->where('is_active', true);
     }
 
     /**
-     * Check if the user is verified.
+     * Helper
      */
     public function isVerified()
     {

@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\DeliveryLocationController;
 use App\Http\Controllers\Api\WebsiteSettingsController;
+use App\Http\Controllers\Api\NotificationController;
+
 use App\Http\Controllers\Api\PolicyController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\BoxController;
@@ -94,7 +96,16 @@ Route::prefix('boxes')->group(function () {
         Route::get('search', [FaqController::class, 'search']);
         Route::get('{id}', [FaqController::class, 'show']);
     });
+  Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
+    // User की सभी notifications fetch करना
+    Route::get('/', [NotificationController::class, 'getNotifications']);
 
+    // Single notification mark as read
+    Route::post('{id}/read', [NotificationController::class, 'markAsRead']);
+
+    // Unread notifications count
+    Route::get('unread-count', [NotificationController::class, 'unreadCount']);
+});
     // Public contact routes
     Route::post('contact', [ContactController::class, 'store']);
 

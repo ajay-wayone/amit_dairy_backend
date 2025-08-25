@@ -18,7 +18,7 @@ class CartController extends Controller
         try {
             $user = $request->user();
             
-            $cartItems = Cart::with(['product:id,name,price,image,description,stock_quantity'])
+            $cartItems = Cart::with(['product:id,name,price,product_image,description'])
                 ->where('user_id', $user->id)
                 ->where('is_active', true)
                 ->get();
@@ -69,12 +69,12 @@ class CartController extends Controller
             $product = Product::findOrFail($request->product_id);
 
             // Check if product is in stock
-            if ($product->stock_quantity < $request->quantity) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Insufficient stock available',
-                ], 400);
-            }
+            // if ($product->stock_quantity < $request->quantity) {
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => 'Insufficient stock available',
+            //     ], 400);
+            // }
 
             // Check if item already exists in cart
             $existingCartItem = Cart::where('user_id', $user->id)
@@ -86,12 +86,12 @@ class CartController extends Controller
                 // Update quantity if item already exists
                 $newQuantity = $existingCartItem->quantity + $request->quantity;
                 
-                if ($product->stock_quantity < $newQuantity) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Insufficient stock available for requested quantity',
-                    ], 400);
-                }
+                // if ($product->stock_quantity < $newQuantity) {
+                //     return response()->json([
+                //         'status' => false,
+                //         'message' => 'Insufficient stock available for requested quantity',
+                //     ], 400);
+                // }
 
                 $existingCartItem->quantity = $newQuantity;
                 $existingCartItem->total_price = $existingCartItem->price * $newQuantity;
@@ -100,7 +100,7 @@ class CartController extends Controller
                 return response()->json([
                     'status' => true,
                     'message' => 'Cart item quantity updated successfully',
-                    'data' => $existingCartItem->load('product:id,name,price,image,description,stock_quantity')
+                    'data' => $existingCartItem->load('product:id,name,price,product_image,description')
                 ]);
             }
 
@@ -117,7 +117,7 @@ class CartController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Item added to cart successfully',
-                'data' => $cartItem->load('product:id,name,price,image,description,stock_quantity')
+                'data' => $cartItem->load('product:id,name,price,product_image,description')
             ], 201);
 
         } catch (\Exception $e) {
@@ -178,7 +178,7 @@ class CartController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Cart item quantity updated successfully',
-                'data' => $cartItem->load('product:id,name,price,image,description,stock_quantity')
+                'data' => $cartItem->load('product:id,name,price,product_image,description')
             ]);
 
         } catch (\Exception $e) {
@@ -261,7 +261,7 @@ class CartController extends Controller
         try {
             $user = $request->user();
             
-            $cartItems = Cart::with(['product:id,name,price,image,stock_quantity'])
+            $cartItems = Cart::with(['product:id,name,price,product_image'])
                 ->where('user_id', $user->id)
                 ->where('is_active', true)
                 ->get();
