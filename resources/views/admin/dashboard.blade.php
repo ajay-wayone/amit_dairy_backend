@@ -220,8 +220,19 @@
                 </div>
             </div>
 
-            <!-- Top Products -->
+            <!-- Top Products and Order Status Chart -->
             <div class="col-xl-4">
+                <!-- Order Status Chart -->
+                <div class="card dashboard-card mb-4">
+                    <div class="card-header">
+                        <h4 class="card-title mb-0">Order Status Distribution</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="orderStatusChart" style="height: 300px;"></div>
+                    </div>
+                </div>
+
+                <!-- Top Products -->
                 <div class="card dashboard-card">
                     <div class="card-header">
                         <h4 class="card-title mb-0">Top Selling Products</h4>
@@ -313,4 +324,72 @@
             border-radius: 50%;
         }
     </style>
+@endpush
+
+@push('scripts')
+    <!-- Charting library -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the chart
+            var chartDom = document.getElementById('orderStatusChart');
+            var myChart = echarts.init(chartDom);
+            
+            // Chart options
+            var option = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} ({d}%)'
+                },
+                legend: {
+                    orient: 'horizontal',
+                    bottom: 0,
+                    data: ['Pending', 'Processing', 'Delivered', 'Cancelled']
+                },
+                series: [
+                    {
+                        name: 'Order Status',
+                        type: 'pie',
+                        radius: ['50%', '70%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: {
+                            borderRadius: 10,
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: '18',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        data: [
+                            { value: {{ $stats['pending_orders'] ?? 0 }}, name: 'Pending' },
+                            { value: {{ $stats['processing_orders'] ?? 0 }}, name: 'Processing' },
+                            { value: {{ $stats['delivered_orders'] ?? 0 }}, name: 'Delivered' },
+                            { value: {{ $stats['cancelled_orders'] ?? 0 }}, name: 'Cancelled' }
+                        ]
+                    }
+                ],
+                color: ['#FFC107', '#17A2B8', '#28A745', '#DC3545']
+            };
+            
+            // Apply the chart options
+            myChart.setOption(option);
+            
+            // Responsive chart on window resize
+            window.addEventListener('resize', function() {
+                myChart.resize();
+            });
+        });
+    </script>
 @endpush

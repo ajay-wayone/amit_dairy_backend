@@ -13,7 +13,7 @@ class BoxController extends Controller
 {
     $boxes = Box::where('is_active', true)
         ->orderBy('box_name')
-        ->get(); // <- get() use kiya
+        ->get(); 
 
     return response()->json([
         'success' => true,

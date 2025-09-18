@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('plan_name');
             $table->integer('duration_days');
-            $table->decimal('amount', 10, 2);
+            $table->decimal('price  ', 10, 2);
             $table->string('image')->nullable();
             $table->text('description')->nullable();
             $table->boolean('status')->default(true);

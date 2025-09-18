@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Subcategory;
 use App\Models\Category;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\UserNotification;
 
 class SubcategoryController extends Controller
 {
@@ -32,15 +34,13 @@ class SubcategoryController extends Controller
                 $query->where('subcategory_name', 'like', '%' . $request->search . '%');
             }
 
-            // Sort subcategories
+            // Sort
             $sortBy = $request->get('sort_by', 'sort_order');
             $sortOrder = $request->get('sort_order', 'asc');
-            
             $allowedSortFields = ['subcategory_name', 'sort_order', 'created_at'];
             if (!in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'sort_order';
             }
-            
             $query->orderBy($sortBy, $sortOrder);
 
             $perPage = $request->get('per_page', 20);
@@ -64,13 +64,13 @@ class SubcategoryController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get subcategory details with products
+     * Show subcategory details with featured products
      */
     public function show($id)
     {
@@ -89,7 +89,6 @@ class SubcategoryController extends Controller
                 ], 404);
             }
 
-            // Get featured products from this subcategory
             $featuredProducts = $subcategory->products()
                 ->where('status', true)
                 ->where('best_seller', true)
@@ -110,13 +109,13 @@ class SubcategoryController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get subcategories by category ID
+     * Get subcategories by category
      */
     public function byCategory(Request $request, $categoryId)
     {
@@ -129,7 +128,7 @@ class SubcategoryController extends Controller
                 return response()->json([
                     'status' => false,
                     'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
+                    'errors' => $validator->errors()
                 ], 422);
             }
 
@@ -152,7 +151,7 @@ class SubcategoryController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -182,8 +181,28 @@ class SubcategoryController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
-} 
+
+    /**
+     * Optional: Notify admins about new subcategory
+     */
+    protected function notifyAdmins(Subcategory $subcategory)
+    {
+        try {
+            $admins = User::where('role', 'admin')->where('is_active', true)->get();
+
+            foreach ($admins as $admin) {
+                $admin->notify(new UserNotification(
+                    'New Subcategory Added',
+                    'A new subcategory "' . $subcategory->subcategory_name . '" has been added.',
+                    ['subcategory_id' => $subcategory->id, 'type' => 'new_subcategory']
+                ));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Subcategory notification failed: '.$e->getMessage());
+        }
+    }
+}

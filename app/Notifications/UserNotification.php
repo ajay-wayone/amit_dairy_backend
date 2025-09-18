@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
@@ -9,26 +8,28 @@ class UserNotification extends Notification
 {
     use Queueable;
 
-    protected $title;
-    protected $message;
+    public $title;
+    public $message;
+    public $data;
 
-    public function __construct($title, $message)
+    public function __construct($title, $message, $data = [])
     {
-        $this->title = $title;
+        $this->title   = $title;
         $this->message = $message;
+        $this->data    = $data;
     }
 
     public function via($notifiable)
     {
-        return ['database']; // abhi ke liye database
+        return ['database']; // ya 'mail' agar email bhejna ho
     }
 
-    public function toDatabase($notifiable)
+    public function toArray($notifiable)
     {
         return [
             'title'   => $this->title,
             'message' => $this->message,
-            'user_id' => $notifiable->id
+            'data'    => $this->data,
         ];
     }
 }

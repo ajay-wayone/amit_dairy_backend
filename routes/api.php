@@ -13,7 +13,7 @@ use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\DeliveryLocationController;
 use App\Http\Controllers\Api\WebsiteSettingsController;
 use App\Http\Controllers\Api\NotificationController;
-
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PolicyController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\BoxController;
@@ -60,6 +60,7 @@ Route::prefix('v1')->group(function () {
         Route::get('{id}', [CategoryController::class, 'show']);
         Route::get('{id}/subcategories', [CategoryController::class, 'subcategories']);
     });
+    
 
     // Public subcategory routes
     Route::prefix('subcategories')->group(function () {
@@ -97,18 +98,12 @@ Route::prefix('boxes')->group(function () {
         Route::get('{id}', [FaqController::class, 'show']);
     });
   Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
-    // User की सभी notifications fetch करना
     Route::get('/', [NotificationController::class, 'getNotifications']);
-
-    // Single notification mark as read
     Route::post('{id}/read', [NotificationController::class, 'markAsRead']);
-
-    // Unread notifications count
     Route::get('unread-count', [NotificationController::class, 'unreadCount']);
 });
     // Public contact routes
     Route::post('contact', [ContactController::class, 'store']);
-
     // Public subscription routes
     Route::prefix('subscriptions')->group(function () {
         Route::get('/', [SubscriptionController::class, 'index']);
@@ -196,6 +191,19 @@ Route::prefix('boxes')->group(function () {
             Route::post('{id}/cancel', [OrderController::class, 'cancel']);
             Route::get('{id}/track', [OrderController::class, 'track']);
         });
+        // Public payment routes
+        Route::prefix(prefix: 'payments')->group(function () {
+        Route::post('create', [PaymentController::class, 'pay']);
+
+    Route::post('webhook', [PaymentController::class, 'webhook']);
+});
+
+        Route::middleware('auth:sanctum')->prefix('payments')->group(function () {
+        Route::get('/', [PaymentController::class, 'index']);
+
+            Route::get('{id}', [PaymentController::class, 'show']);
+        });
+
 
         // Review routes (protected)
         Route::prefix('reviews')->group(function () {

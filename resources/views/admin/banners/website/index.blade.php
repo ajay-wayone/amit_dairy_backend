@@ -36,8 +36,8 @@
                             <div class="h6 mb-0 font-weight-bold text-gray-800">Add Home Banner</div>
                         </div>
                         <div class="col-auto">
-                            <a href="{{ route('admin.website-banners.create') }}?page_name=home" class="btn btn-primary btn-circle">
-                                <i class="fas fa-plus">add</i>
+                            <a href="{{ route('admin.website-banners.create') }}?page_name=home" class="btn btn-outline-primary btn-circle">
+                                <i class="fas fa-plus"></i>
                             </a>
                         </div>
                     </div>
@@ -54,8 +54,8 @@
                             <div class="h6 mb-0 font-weight-bold text-gray-800">Add About Banner</div>
                         </div>
                         <div class="col-auto">
-                            <a href="{{ route('admin.website-banners.create') }}?page_name=about" class="btn btn-success btn-circle">
-                                <i class="fas fa-plus">add</i>
+                            <a href="{{ route('admin.website-banners.create') }}?page_name=about" class="btn btn-outline-success btn-circle">
+                                <i class="fas fa-plus"></i>
                             </a>
                         </div>
                     </div>
@@ -72,8 +72,8 @@
                             <div class="h6 mb-0 font-weight-bold text-gray-800">Add Contact Banner</div>
                         </div>
                         <div class="col-auto">
-                            <a href="{{ route('admin.website-banners.create') }}?page_name=contact" class="btn btn-info btn-circle">
-                                <i class="fas fa-plus">add</i>
+                            <a href="{{ route('admin.website-banners.create') }}?page_name=contact" class="btn btn-outline-info btn-circle">
+                                <i class="fas fa-plus"></i>
                             </a>
                         </div>
                     </div>
@@ -90,8 +90,8 @@
                             <div class="h6 mb-0 font-weight-bold text-gray-800">Add Services Banner</div>
                         </div>
                         <div class="col-auto">
-                            <a href="{{ route('admin.website-banners.create') }}?page_name=services" class="btn btn-warning btn-circle">
-                                <i class="fas fa-plus">add</i>
+                            <a href="{{ route('admin.website-banners.create') }}?page_name=services" class="btn btn-outline-warning btn-circle">
+                                <i class="fas fa-plus"></i>
                             </a>
                         </div>
                     </div>
@@ -126,7 +126,7 @@
                 <table class="table table-bordered" width="100%" cellspacing="0">
                     <thead class="thead-light">
                         <tr>
-                            <th>ID</th>
+                            <th>Sr.n</th>
                             <th>Page Name</th>
                             <th>Title</th>
                             <th>Subtitle</th>
@@ -179,21 +179,26 @@
                                 <span class="text-muted">No Image</span>
                                 @endif
                             </td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a href="{{ route('admin.website-banners.edit', $banner->id) }}" 
-                                       class="btn btn-primary btn-sm" title="Edit">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
-                                    <form action="{{ route('admin.website-banners.destroy', $banner->id) }}" method="POST" class="delete-form">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Delete">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
+                           <td>
+                        <div class="btn-group" role="group">
+                            <!-- Edit Button -->
+                            <a href="{{ route('admin.website-banners.edit', $banner->id) }}" 
+                            class="btn btn-outline-primary btn-sm me-2 mb-3" title="Edit">
+                                <i class="fa fa-edit"></i> 
+                            </a>
+
+                            <!-- Delete Button -->
+                            <form action="{{ route('admin.website-banners.destroy', $banner->id) }}" 
+                                method="POST" class="delete-form" style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                    <i class="fa fa-trash"></i> <!-- or fas fa-trash -->
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+
                         </tr>
                         @empty
                         <tr>
@@ -223,6 +228,8 @@
     </div>
 </div>
 @endsection
+<!-- Latest Font Awesome (v6) -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
 @push('styles')
 <style>
@@ -248,7 +255,6 @@
 @endpush
 
 @push('scripts')
-<!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -283,7 +289,7 @@
                 const bsAlert = new bootstrap.Alert(alert);
                 bsAlert.close();
             });
-        }, 5000);
+        }, 2000);
     });
 </script>
 @endpush

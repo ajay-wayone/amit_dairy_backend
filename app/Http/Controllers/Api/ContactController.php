@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContactEnquiry;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\UserNotification;
 
 class ContactController extends Controller
 {
@@ -40,6 +42,9 @@ class ContactController extends Controller
                 'status' => 'unread',
             ]);
 
+            // Notify all admins about new contact enquiry
+            $this->notifyAdmins($contact);
+
             return response()->json([
                 'status' => true,
                 'message' => 'Contact enquiry submitted successfully. We will get back to you soon.',
@@ -71,12 +76,10 @@ class ContactController extends Controller
             
             $query = ContactEnquiry::where('email', $user->email);
 
-            // Filter by status
             if ($request->has('status')) {
                 $query->where('status', $request->status);
             }
 
-            // Sort enquiries
             $sortBy = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
             
@@ -146,4 +149,25 @@ class ContactController extends Controller
             ], 500);
         }
     }
-} 
+
+    /**
+     * Notify admin users about new contact enquiry
+     */
+    protected function notifyAdmins(ContactEnquiry $contact)
+    {
+        try {
+            $admins = User::where('role', 'admin')->where('is_active', true)->get();
+
+            foreach ($admins as $admin) {
+                $admin->notify(new UserNotification(
+                    'New Contact Enquiry',
+                    'A new contact enquiry from ' . $contact->name . ' has been submitted.',
+                    ['contact_id' => $contact->id, 'type' => 'contact_enquiry']
+                ));
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Contact notification failed: '.$e->getMessage());
+        }
+    }
+}

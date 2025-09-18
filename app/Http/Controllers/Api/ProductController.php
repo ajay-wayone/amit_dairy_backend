@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Subcategory;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\UserNotification;
 
 class ProductController extends Controller
 {
@@ -39,6 +41,7 @@ class ProductController extends Controller
             if ($request->has('min_price')) {
                 $query->where('price', '>=', $request->min_price);
             }
+
             if ($request->has('max_price')) {
                 $query->where('price', '<=', $request->max_price);
             }
@@ -65,7 +68,6 @@ class ProductController extends Controller
 
             $query->orderBy($sortBy, $sortOrder);
 
-            // 👇 Pagination हटाया → अब सारे products लाएँगे
             $products = $query->get();
 
             return response()->json([
@@ -78,13 +80,13 @@ class ProductController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get featured products
+     * Featured products
      */
     public function featured()
     {
@@ -106,13 +108,13 @@ class ProductController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get special products
+     * Special products
      */
     public function special()
     {
@@ -134,13 +136,13 @@ class ProductController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get new arrivals
+     * New arrivals
      */
     public function newArrivals()
     {
@@ -161,13 +163,13 @@ class ProductController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get product details
+     * Show product details
      */
     public function show($id)
     {
@@ -211,13 +213,13 @@ class ProductController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Search products (NO pagination)
+     * Search products
      */
     public function search(Request $request)
     {
@@ -240,7 +242,7 @@ class ProductController extends Controller
                     $q->where('name', 'like', '%' . $request->query . '%')
                       ->orWhere('description', 'like', '%' . $request->query . '%');
                 })
-                ->get(); // 👈 paginate हटाया
+                ->get();
 
             return response()->json([
                 'status' => true,
@@ -252,13 +254,13 @@ class ProductController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get products by category (NO pagination)
+     * Products by category
      */
     public function productsByCategory($categoryId)
     {
@@ -278,7 +280,7 @@ class ProductController extends Controller
                 ->where('status', true)
                 ->where('category_id', $categoryId)
                 ->orderBy('created_at', 'desc')
-                ->get(); // 👈 paginate हटाया
+                ->get();
 
             return response()->json([
                 'status' => true,
@@ -293,13 +295,13 @@ class ProductController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get products by subcategory (NO pagination)
+     * Products by subcategory
      */
     public function productsBySubcategory($subcategoryId)
     {
@@ -320,7 +322,7 @@ class ProductController extends Controller
                 ->where('status', true)
                 ->where('subcategory_id', $subcategoryId)
                 ->orderBy('created_at', 'desc')
-                ->get(); // 👈 paginate हटाया
+                ->get();
 
             return response()->json([
                 'status' => true,
@@ -335,10 +337,28 @@ class ProductController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
+    /**
+     * Notify admins about new product (optional, if creating products via API)
+     */
+    protected function notifyAdmins(Product $product)
+    {
+        try {
+            $admins = User::where('role', 'admin')->where('is_active', true)->get();
 
+            foreach ($admins as $admin) {
+                $admin->notify(new UserNotification(
+                    'New Product Added',
+                    'A new product "' . $product->name . '" has been added.',
+                    ['product_id' => $product->id, 'type' => 'new_product']
+                ));
+            }
+        } catch (\Exception $e) {
+            \Log::error('Product notification failed: '.$e->getMessage());
+        }
+    }
 }

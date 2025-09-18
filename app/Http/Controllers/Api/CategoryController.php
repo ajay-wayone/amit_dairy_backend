@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Subcategory;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\UserNotification;
 
 class CategoryController extends Controller
 {
@@ -24,22 +26,18 @@ class CategoryController extends Controller
                 $query->where('status', true);
             }]);
 
-            // Search by name
             if ($request->has('search')) {
                 $query->where('name', 'like', '%' . $request->search . '%');
             }
 
-            // Sort categories
             $sortBy = $request->get('sort_by', 'sort_order');
             $sortOrder = $request->get('sort_order', 'asc');
-            
             $allowedSortFields = ['name', 'sort_order', 'created_at'];
             if (!in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'sort_order';
             }
-            
-            $query->orderBy($sortBy, $sortOrder);
 
+            $query->orderBy($sortBy, $sortOrder);
             $perPage = $request->get('per_page', 20);
             $categories = $query->paginate($perPage);
 
@@ -91,7 +89,6 @@ class CategoryController extends Controller
                 ], 404);
             }
 
-            // Get featured products from this category
             $featuredProducts = $category->products()
                 ->where('status', true)
                 ->where('best_seller', true)
@@ -162,34 +159,76 @@ class CategoryController extends Controller
     /**
      * Get featured categories
      */
-  public function featured()
-{
-    try {
-        $categories = Category::with(['subcategories' => function($query) {
-                $query->where('is_active', true);
-            }])
-            ->where('is_active', true)
-            ->where('featured', 1) 
-            ->withCount(['products' => function($query) {
-                $query->where('status', true);
-            }])
-            ->orderBy('sort_order', 'asc')
-            ->limit(6)
-            ->get();
+    public function featured()
+    {
+        try {
+            $categories = Category::with(['subcategories' => function($query) {
+                    $query->where('is_active', true);
+                }])
+                ->where('is_active', true)
+                ->where('featured', 1)
+                ->withCount(['products' => function($query) {
+                    $query->where('status', true);
+                }])
+                ->orderBy('sort_order', 'asc')
+                ->limit(6)
+                ->get();
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Featured categories retrieved successfully',
-            'data' => $categories
-        ]);
+            return response()->json([
+                'status' => true,
+                'message' => 'Featured categories retrieved successfully',
+                'data' => $categories
+            ]);
 
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Something went wrong!',
-            'error' => $e->getMessage(),
-        ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong!',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
-}
 
+    /**
+     * Notify all users about a new category
+     */
+    public function notifyNewCategory(Category $category)
+    {
+        try {
+            $users = User::where('is_active', true)->get();
+
+            foreach ($users as $user) {
+                $user->notify(new UserNotification(
+                    'New Category Added',
+                    'A new category "' . $category->name . '" has been added. Check it out!',
+                    ['category_id' => $category->id, 'type' => 'new_category']
+                ));
+            }
+
+        } catch (\Exception $e) {
+            // Log error but don't break main process
+            \Log::error('Category notification failed: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Notify all users about a new subcategory
+     */
+    public function notifyNewSubcategory(Subcategory $subcategory)
+    {
+        try {
+            $users = User::where('is_active', true)->get();
+
+            foreach ($users as $user) {
+                $user->notify(new UserNotification(
+                    'New Subcategory Added',
+                    'A new subcategory "' . $subcategory->subcategory_name . '" under category "' . $subcategory->category->name . '" has been added.',
+                    ['subcategory_id' => $subcategory->id, 'type' => 'new_subcategory']
+                ));
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Subcategory notification failed: '.$e->getMessage());
+        }
+    }
 }

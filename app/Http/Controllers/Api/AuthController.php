@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Notifications\UserNotification;
 
 class AuthController extends Controller
 {
@@ -46,6 +47,13 @@ class AuthController extends Controller
                 'otp'         => $otp,
                 'is_verified' => 0,
             ]);
+
+            // Send notification for signup
+            $user->notify(new UserNotification(
+                'Account Created',
+                'Your account has been created. Please verify OTP to activate.',
+                ['user_id' => $user->id, 'type' => 'signup']
+            ));
 
             // Step 4: Return response with OTP directly
             return response()->json([
@@ -112,6 +120,14 @@ class AuthController extends Controller
                     $user->is_verified       = 1;
                     $user->email_verified_at = now();
                     $user->save();
+                    
+                    // Send notification for verified signup
+                    $user->notify(new UserNotification(
+                        'Account Verified',
+                        'Your account is now verified and active.',
+                        ['user_id' => $user->id, 'type' => 'signup_verified']
+                    ));
+                    
                     $token = $user->createToken('auth_token')->plainTextToken;
 
                     return response()->json([
@@ -127,6 +143,14 @@ class AuthController extends Controller
 
                 case 'login':
                     $user->save();
+                    
+                    // Send notification for login
+                    $user->notify(new UserNotification(
+                        'Login Successful',
+                        'You have successfully logged in to your account.',
+                        ['user_id' => $user->id, 'type' => 'login']
+                    ));
+                    
                     $token = $user->createToken('auth_token')->plainTextToken;
 
                     return response()->json([
@@ -142,6 +166,14 @@ class AuthController extends Controller
 
                 case 'resetpassword':
                     $user->save();
+                    
+                    // Send notification for password reset request
+                    $user->notify(new UserNotification(
+                        'Password Reset Requested',
+                        'You can now reset your password using the provided token.',
+                        ['user_id' => $user->id, 'type' => 'password_reset']
+                    ));
+                    
                     // ⚠️ Generate temporary token for password reset
                     $resetToken = Str::random(60);
 
@@ -153,6 +185,14 @@ class AuthController extends Controller
 
                 case 'forgetpassword':
                     $user->save();
+                    
+                    // Send notification for password reset OTP verification
+                    $user->notify(new UserNotification(
+                        'Password Reset OTP Verified',
+                        'You can now set a new password for your account.',
+                        ['user_id' => $user->id, 'type' => 'password_reset_verified']
+                    ));
+                    
                     return response()->json([
                         'status'  => true,
                         'message' => 'OTP verified, you can set a new password now',
@@ -209,6 +249,13 @@ class AuthController extends Controller
                 'purpose' => 'login',
             ]);
 
+            // Send notification for OTP generation
+            $user->notify(new UserNotification(
+                'Login OTP Generated',
+                'Your login OTP has been generated. Please use it to complete your login.',
+                ['user_id' => $user->id, 'type' => 'login_otp']
+            ));
+
             // 📩 Yaha tum OTP email/SMS kar sakte ho
             // Mail::to($user->email)->send(new LoginOtpMail($otp));
 
@@ -234,7 +281,6 @@ class AuthController extends Controller
     /**
      * Forgot Password API
      */
-
     public function forgotPassword(Request $request)
     {
         try {
@@ -271,6 +317,13 @@ class AuthController extends Controller
             $user->otp     = $otp;
             $user->purpose = 'forgetpassword';
             $user->save();
+
+            // Send notification for password reset OTP
+            $user->notify(new UserNotification(
+                'Password Reset OTP',
+                'Your password reset OTP has been generated. Please use it to reset your password.',
+                ['user_id' => $user->id, 'type' => 'password_reset_otp']
+            ));
 
             // Step 5: Response with OTP
             return response()->json([
@@ -335,6 +388,13 @@ class AuthController extends Controller
             $user->otp      = null;
             $user->save();
 
+            // Send notification for successful password reset
+            $user->notify(new UserNotification(
+                'Password Reset Successful',
+                'Your password has been reset successfully.',
+                ['user_id' => $user->id, 'type' => 'password_reset_success']
+            ));
+
             return response()->json([
                 'status'  => true,
                 'message' => 'Password reset successfully',
@@ -355,7 +415,15 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
+            $user = $request->user();
             $request->user()->currentAccessToken()->delete();
+
+            // Send notification for logout
+            $user->notify(new UserNotification(
+                'Logout Successful',
+                'You have successfully logged out from your account.',
+                ['user_id' => $user->id, 'type' => 'logout']
+            ));
 
             return response()->json([
                 'status'  => true,
@@ -424,6 +492,13 @@ class AuthController extends Controller
 
             $user->update($request->only(['full_name', 'phone']));
 
+            // Send notification for profile update
+            $user->notify(new UserNotification(
+                'Profile Updated',
+                'Your profile has been updated successfully.',
+                ['user_id' => $user->id, 'type' => 'profile_update']
+            ));
+
             return response()->json([
                 'status'  => true,
                 'message' => 'Profile updated successfully',
@@ -483,6 +558,13 @@ class AuthController extends Controller
             $user->purpose  = null;
             $user->save();
 
+            // Send notification for password creation
+            $user->notify(new UserNotification(
+                'Password Created',
+                'Your password has been created successfully.',
+                ['user_id' => $user->id, 'type' => 'password_created']
+            ));
+
             return response()->json([
                 'status'  => true,
                 'message' => 'Password created successfully',
@@ -501,5 +583,4 @@ class AuthController extends Controller
             ], 500);
         }
     }
-
 }

@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\UserNotification;
 
 class CartController extends Controller
 {
@@ -68,34 +70,22 @@ class CartController extends Controller
             $user = $request->user();
             $product = Product::findOrFail($request->product_id);
 
-            // Check if product is in stock
-            // if ($product->stock_quantity < $request->quantity) {
-            //     return response()->json([
-            //         'status' => false,
-            //         'message' => 'Insufficient stock available',
-            //     ], 400);
-            // }
-
-            // Check if item already exists in cart
             $existingCartItem = Cart::where('user_id', $user->id)
                 ->where('product_id', $request->product_id)
                 ->where('is_active', true)
                 ->first();
 
             if ($existingCartItem) {
-                // Update quantity if item already exists
-                $newQuantity = $existingCartItem->quantity + $request->quantity;
-                
-                // if ($product->stock_quantity < $newQuantity) {
-                //     return response()->json([
-                //         'status' => false,
-                //         'message' => 'Insufficient stock available for requested quantity',
-                //     ], 400);
-                // }
-
-                $existingCartItem->quantity = $newQuantity;
-                $existingCartItem->total_price = $existingCartItem->price * $newQuantity;
+                $existingCartItem->quantity += $request->quantity;
+                $existingCartItem->total_price = $existingCartItem->price * $existingCartItem->quantity;
                 $existingCartItem->save();
+
+                // Notification for quantity update
+                $user->notify(new UserNotification(
+                    'Cart Updated',
+                    'Quantity for "' . $product->name . '" has been updated in your cart.',
+                    ['cart_id' => $existingCartItem->id, 'type' => 'cart_updated']
+                ));
 
                 return response()->json([
                     'status' => true,
@@ -104,15 +94,21 @@ class CartController extends Controller
                 ]);
             }
 
-            // Create new cart item
             $cartItem = Cart::create([
                 'user_id' => $user->id,
-                'product_id' => $request->product_id,
+                'product_id' => $product->id,
                 'quantity' => $request->quantity,
                 'price' => $product->price,
                 'total_price' => $product->price * $request->quantity,
                 'is_active' => true
             ]);
+
+            // Notification for new cart item
+            $user->notify(new UserNotification(
+                'New Item Added',
+                '"' . $product->name . '" has been added to your cart.',
+                ['cart_id' => $cartItem->id, 'type' => 'cart_item_added']
+            ));
 
             return response()->json([
                 'status' => true,
@@ -148,7 +144,6 @@ class CartController extends Controller
             }
 
             $user = $request->user();
-            
             $cartItem = Cart::where('id', $id)
                 ->where('user_id', $user->id)
                 ->where('is_active', true)
@@ -161,19 +156,16 @@ class CartController extends Controller
                 ], 404);
             }
 
-            $product = Product::find($cartItem->product_id);
-
-            // Check stock availability
-            if ($product->stock_quantity < $request->quantity) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Insufficient stock available',
-                ], 400);
-            }
-
             $cartItem->quantity = $request->quantity;
             $cartItem->total_price = $cartItem->price * $request->quantity;
             $cartItem->save();
+
+            // Notification for quantity update
+            $user->notify(new UserNotification(
+                'Cart Updated',
+                'Quantity for "' . $cartItem->product->name . '" has been updated in your cart.',
+                ['cart_id' => $cartItem->id, 'type' => 'cart_updated']
+            ));
 
             return response()->json([
                 'status' => true,
@@ -197,7 +189,6 @@ class CartController extends Controller
     {
         try {
             $user = $request->user();
-            
             $cartItem = Cart::where('id', $id)
                 ->where('user_id', $user->id)
                 ->where('is_active', true)
@@ -212,6 +203,13 @@ class CartController extends Controller
 
             $cartItem->is_active = false;
             $cartItem->save();
+
+            // Notification for removal
+            $user->notify(new UserNotification(
+                'Cart Item Removed',
+                '"' . $cartItem->product->name . '" has been removed from your cart.',
+                ['cart_id' => $cartItem->id, 'type' => 'cart_item_removed']
+            ));
 
             return response()->json([
                 'status' => true,
@@ -234,10 +232,17 @@ class CartController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             Cart::where('user_id', $user->id)
                 ->where('is_active', true)
                 ->update(['is_active' => false]);
+
+            // Notification for clearing cart
+            $user->notify(new UserNotification(
+                'Cart Cleared',
+                'All items have been removed from your cart.',
+                ['type' => 'cart_cleared']
+            ));
 
             return response()->json([
                 'status' => true,
@@ -289,4 +294,4 @@ class CartController extends Controller
             ], 500);
         }
     }
-} 
+}

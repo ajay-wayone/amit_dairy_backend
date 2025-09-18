@@ -8,45 +8,43 @@ use Illuminate\Http\Request;
 class NotificationController extends Controller
 {
     // ✅ User ki sabhi notifications
-    public function getNotifications(Request $request)
-    {
-        $user = $request->user();
+  public function getNotifications(Request $request)
+{
+    $user = $request->user();
 
+    return response()->json([
+        'status' => true,
+        'data'   => $user->notifications()->orderBy('created_at', 'desc')->get()
+    ]);
+}
+
+public function markAsRead(Request $request, $id)
+{
+    $user = $request->user();
+    $notification = $user->notifications()->where('id', $id)->first();
+
+    if (!$notification) {
         return response()->json([
-            'status' => true,
-            'data'   => $user->notifications()->orderBy('created_at', 'desc')->get()
-        ]);
+            'status'  => false,
+            'message' => 'Notification not found'
+        ], 404);
     }
 
-    // ✅ Single notification mark as read
-    public function markAsRead(Request $request, $id)
-    {
-        $user = $request->user();
-        $notification = $user->notifications()->where('id', $id)->first();
+    $notification->markAsRead();
 
-        if (!$notification) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Notification not found'
-            ], 404);
-        }
+    return response()->json([
+        'status'  => true,
+        'message' => 'Notification marked as read'
+    ]);
+}
 
-        $notification->markAsRead();
+public function unreadCount(Request $request)
+{
+    $user = $request->user();
 
-        return response()->json([
-            'status'  => true,
-            'message' => 'Notification marked as read'
-        ]);
-    }
-
-    // ✅ Unread notifications count
-    public function unreadCount(Request $request)
-    {
-        $user = $request->user();
-
-        return response()->json([
-            'status' => true,
-            'count'  => $user->unreadNotifications()->count()
-        ]);
-    }
+    return response()->json([
+        'status' => true,
+        'count'  => $user->unreadNotifications()->count()
+    ]);
+}
 }
