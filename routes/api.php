@@ -14,6 +14,9 @@ use App\Http\Controllers\Api\DeliveryLocationController;
 use App\Http\Controllers\Api\WebsiteSettingsController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\AddressController;
+use App\Http\Controllers\Api\AdvancePaymentController;
+
 use App\Http\Controllers\Api\PolicyController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\BoxController;
@@ -22,8 +25,9 @@ use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\ReviewController;
 use Illuminate\Support\Facades\Route;
 
+
 Route::prefix('v1')->group(function () {
-    
+
     // Public routes (no authentication required)
     Route::prefix('auth')->group(function () {
         Route::post('signup', [AuthController::class, 'signup']);
@@ -60,7 +64,7 @@ Route::prefix('v1')->group(function () {
         Route::get('{id}', [CategoryController::class, 'show']);
         Route::get('{id}/subcategories', [CategoryController::class, 'subcategories']);
     });
-    
+
 
     // Public subcategory routes
     Route::prefix('subcategories')->group(function () {
@@ -77,19 +81,26 @@ Route::prefix('v1')->group(function () {
         Route::get('{id}', [TestimonialController::class, 'show']);
         Route::post('/', [TestimonialController::class, 'store']);
     });
+    // Public advance payment routes
+    // Public advance payment routes
+    Route::prefix('advance-payments')->group(function () {
+        Route::get('/', [AdvancePaymentController::class, 'index']);   // All advance payments
+        Route::get('{id}', [AdvancePaymentController::class, 'show']); // Single advance payment
+    });
+
 
     // Public banner routes
-   Route::prefix('banners')->group(function () {
-    // Get all active banners
-    Route::get('/', [BannerController::class, 'index']);
+    Route::prefix('banners')->group(function () {
+        // Get all active banners
+        Route::get('/', [BannerController::class, 'index']);
 
-    // Get single banner by ID
-    Route::get('{id}', [BannerController::class, 'show']);
-});
-Route::prefix('boxes')->group(function () {
-    Route::get('/', [BoxController::class, 'index']);   // All boxes
-    Route::get('{id}', [BoxController::class, 'show']); // Single box
-});
+        // Get single banner by ID
+        Route::get('{id}', [BannerController::class, 'show']);
+    });
+    Route::prefix('boxes')->group(function () {
+        Route::get('/', [BoxController::class, 'index']);   // All boxes
+        Route::get('{id}', [BoxController::class, 'show']); // Single box
+    });
     // Public FAQ routes
     Route::prefix('faqs')->group(function () {
         Route::get('/', [FaqController::class, 'index']);
@@ -97,11 +108,11 @@ Route::prefix('boxes')->group(function () {
         Route::get('search', [FaqController::class, 'search']);
         Route::get('{id}', [FaqController::class, 'show']);
     });
-  Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
-    Route::get('/', [NotificationController::class, 'getNotifications']);
-    Route::post('{id}/read', [NotificationController::class, 'markAsRead']);
-    Route::get('unread-count', [NotificationController::class, 'unreadCount']);
-});
+    Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'getNotifications']);
+        Route::post('{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::get('unread-count', [NotificationController::class, 'unreadCount']);
+    });
     // Public contact routes
     Route::post('contact', [ContactController::class, 'store']);
     // Public subscription routes
@@ -152,7 +163,7 @@ Route::prefix('boxes')->group(function () {
 
     // Protected routes (authentication required)
     Route::middleware('auth:sanctum')->group(function () {
-        
+
         // Auth routes
         Route::prefix('auth')->group(function () {
             Route::post('logout', [AuthController::class, 'logout']);
@@ -193,17 +204,23 @@ Route::prefix('boxes')->group(function () {
         });
         // Public payment routes
         Route::prefix(prefix: 'payments')->group(function () {
-        Route::post('create', [PaymentController::class, 'pay']);
+            Route::post('create', [PaymentController::class, 'pay']);
 
-    Route::post('webhook', [PaymentController::class, 'webhook']);
-});
+            Route::post('webhook', [PaymentController::class, 'webhook']);
+        });
 
         Route::middleware('auth:sanctum')->prefix('payments')->group(function () {
-        Route::get('/', [PaymentController::class, 'index']);
+            Route::get('/', [PaymentController::class, 'index']);
 
             Route::get('{id}', [PaymentController::class, 'show']);
         });
+        // address
 
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::get('/addresses', [AddressController::class, 'index']);   // GET
+            Route::post('/addresses', [AddressController::class, 'store']);  // POST
+            Route::put('/addresses/{id}', [AddressController::class, 'update']); // UPDATE
+        });
 
         // Review routes (protected)
         Route::prefix('reviews')->group(function () {

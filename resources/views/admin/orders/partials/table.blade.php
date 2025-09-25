@@ -3,10 +3,9 @@
         <tr>
             <th width="5%">Sr.n</th>
             <th width="12%">Order_Code</th>
-           <th width="12%">Order_id</th>
 
             <th width="15%">Customer</th>
-               <th width="12%">Email</th>
+            <th width="12%">Email</th>
             <th width="12%">Pincode</th>
             <th width="15%">Delivery_Address</th>
             <th width="10%">Amount</th>
@@ -23,7 +22,6 @@
                 <td>
                     <strong>{{ $order->order_code }}</strong>
                 </td>
-                                <td> {{ $order->Order_id  ?? 'N/A' }}</td>
 
                 <td> {{ $order->customer_name }}</td>
                 <td>{{$order->customer_email}}</td>
@@ -65,31 +63,30 @@
                     <div class="action-buttons">
 
                         @if ($order->order_status === 'pending')
-                            <button type="button" class="btn btn-success btn-sm update-status"
-                                data-id="{{ $order->id }}" data-status="pending" title="Confirm Order">
+                            <button type="button" class="btn btn-success btn-sm update-status" data-id="{{ $order->id }}"
+                                data-status="pending" title="Confirm Order">
                                 <i class="ri-check-line"></i>
                             </button>
                         @elseif($order->order_status === 'confirmed')
-                            <button type="button" class="btn btn-warning btn-sm update-status"
-                                data-id="{{ $order->id }}" data-status="confirmed" title="Ready to Dispatch">
+                            <button type="button" class="btn btn-warning btn-sm update-status" data-id="{{ $order->id }}"
+                                data-status="confirmed" title="Ready to Dispatch">
                                 <i class="ri-truck-line"></i>
                             </button>
                         @elseif($order->order_status === 'ready')
-                            <button type="button" class="btn btn-primary btn-sm update-status"
-                                data-id="{{ $order->id }}" data-status="ready" title="Mark as Dispatched">
+                            <button type="button" class="btn btn-primary btn-sm update-status" data-id="{{ $order->id }}"
+                                data-status="ready" title="Mark as Dispatched">
                                 <i class="ri-send-plane-line"></i>
                             </button>
                         @elseif($order->order_status === 'dispatched')
-                            <button type="button" class="btn btn-success btn-sm update-status"
-                                data-id="{{ $order->id }}" data-status="dispatched" title="Mark as Delivered">
+                            <button type="button" class="btn btn-success btn-sm update-status" data-id="{{ $order->id }}"
+                                data-status="dispatched" title="Mark as Delivered">
                                 <i class="ri-check-double-line"></i>
                             </button>
                         @endif
 
                         @if ($order->order_status !== 'delivered' && $order->order_status !== 'cancelled')
-                            <button type="button" class="btn btn-danger btn-sm cancel-order"
-                                data-id="{{ $order->id }}" data-code="{{ $order->order_code }}"
-                                title="Cancel Order">
+                            <button type="button" class="btn btn-danger btn-sm cancel-order" data-id="{{ $order->id }}"
+                                data-code="{{ $order->order_code }}" title="Cancel Order">
                                 <i class="ri-close-line"></i>
                             </button>
                         @endif

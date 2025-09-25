@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\ForgotPasswordController;
 use App\Http\Controllers\Admin\NewsletterController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\AdvancePaymentController;
+
 use App\Http\Controllers\Admin\PolicyController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SubcategoryController;
@@ -55,13 +57,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Products
         Route::get('products/get-subcategories', [ProductController::class, 'getSubcategories'])->name('products.get-subcategories');
 
-            // Products - Main routes
-             Route::resource('products', ProductController::class);
-            Route::post('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('admin.products.toggle-status');
-            Route::post('products/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
+        // Products - Main routes
+        Route::resource('products', ProductController::class);
+        Route::post('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('admin.products.toggle-status');
+        Route::post('products/{product}/toggle-featured', [ProductController::class, 'toggleFeatured'])->name('products.toggle-featured');
 
         // Orders
-    
+
         Route::get('orders/ready', [OrderController::class, 'readyOrders'])->name('orders.ready');
         Route::get('orders/dispatched', [OrderController::class, 'dispatchedOrders'])->name('orders.dispatched');
         Route::get('orders/delivered', [OrderController::class, 'deliveredOrders'])->name('orders.delivered');
@@ -73,14 +75,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('customers/search', [CustomerController::class, 'search'])->name('customers.search');
         Route::post('customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
 
-        
-
-    // Website Banners
-    Route::resource('banners', BannerController::class);
-    Route::post('banners/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('banners.toggle-status');
 
 
-Route::resource('website-banners', WebsiteBannerController::class);
+        // Website Banners
+        Route::resource('banners', BannerController::class);
+        Route::post('banners/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('banners.toggle-status');
+        Route::resource('payments', AdvancePaymentController::class)->only(['index', 'store', 'update']);
+
+
+        Route::resource('website-banners', WebsiteBannerController::class);
         Route::post('website-banners/{website_banner}/toggle-status', [WebsiteBannerController::class, 'toggleStatus'])->name('website-banners.toggle-status');
         // Boxes
         Route::resource('boxes', BoxController::class);
@@ -118,9 +121,10 @@ Route::resource('website-banners', WebsiteBannerController::class);
 
         Route::get('contact-details', function () {
             $id = \App\Models\WebsiteSetting::first()?->id ?? 1;
-            return redirect()->route('admin.contact-details.edit', $id);})->name('contact-details.index');
-            // Contact Details API 
-            Route::get('contact-details/{id}', [WebsiteSettingsController::class, 'show'])->name('contact-details.show');
+            return redirect()->route('admin.contact-details.edit', $id);
+        })->name('contact-details.index');
+        // Contact Details API 
+        Route::get('contact-details/{id}', [WebsiteSettingsController::class, 'show'])->name('contact-details.show');
 
         Route::get('contact-details/{id}/edit', [WebsiteSettingsController::class, 'edit'])->name('contact-details.edit');
         Route::put('contact-details/{id}', [WebsiteSettingsController::class, 'update'])->name('contact-details.update');
@@ -136,9 +140,9 @@ Route::resource('website-banners', WebsiteBannerController::class);
     });
 });
 // block dates routs
-    Route::get('blocked-slots', [BlockedSlotController::class, 'index'])->name('block.index');
-    Route::post('blocked-slots', [BlockedSlotController::class, 'store'])->name('block.store');
-    Route::delete('blocked-slots/{blockedSlot}', [BlockedSlotController::class, 'destroy'])->name('block.destroy');
+Route::get('blocked-slots', [BlockedSlotController::class, 'index'])->name('block.index');
+Route::post('blocked-slots', [BlockedSlotController::class, 'store'])->name('block.store');
+Route::delete('blocked-slots/{blockedSlot}', [BlockedSlotController::class, 'destroy'])->name('block.destroy');
 Route::get('/', function () {
     return redirect()->route('admin.login');
 });

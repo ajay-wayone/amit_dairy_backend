@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg"
+    data-sidebar-image="none" data-preloader="disable">
 
 <head>
     <meta charset="utf-8" />
@@ -30,97 +31,99 @@
     <!-- SweetAlert2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
 
-  <style>
-    .nav-link[aria-expanded="true"] .ri-arrow-down-s-line {
-        transform: rotate(180deg);
-    }
+    <style>
+        .nav-link[aria-expanded="true"] .ri-arrow-down-s-line {
+            transform: rotate(180deg);
+        }
 
-    .nav-link .ri-arrow-down-s-line {
-        transition: transform 0.2s;
-    }
+        .nav-link .ri-arrow-down-s-line {
+            transition: transform 0.2s;
+        }
 
-    .table-responsive {
-        font-size: 0.875rem;
-    }
+        .table-responsive {
+            font-size: 0.875rem;
+        }
 
-    .search-results {
-        max-height: 300px;
-        overflow-y: auto;
-    }
+        .search-results {
+            max-height: 300px;
+            overflow-y: auto;
+        }
 
-    /* Sidebar optimizations */
-    .app-menu {
-        width: 240px !important;
-        max-width: 240px !important;
-        height: 100vh !important;
-        position: fixed;
-        overflow: hidden;
-    }
-
-    .app-menu .navbar-nav {
-        font-size: 0.8rem !important;
-    }
-
-    .app-menu .nav-link {
-        font-size: 0.9rem !important;
-        padding: 0.5rem 1rem !important;
-    }
-
-    .app-menu .nav-link i {
-        font-size: 0.9rem !important;
-        margin-right: 0.5rem !important;
-    }
-
-    .app-menu .menu-dropdown .nav-link {
-        font-size: 0.75rem !important;
-        padding: 0.4rem 1.5rem !important;
-    }
-
-    .app-menu .menu-title {
-        font-size: 1.9rem !important;
-        padding: 0.5rem 1rem !important;
-    }
-
-    .navbar-brand-box .logo img {
-        max-width: 80px !important;
-        height: auto !important;
-    }
-
-    .main-content {
-        margin-left: 240px !important;
-    }
-
-    /* Scrollbar styling for sidebar - HIDDEN but scrollable */
-    #scrollbar {
-        height: calc(100vh - 70px);
-        overflow-y: auto;
-        padding-bottom: 20px;
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE and Edge */
-    }
-
-    /* Hide scrollbar for Chrome, Safari and Opera */
-    #scrollbar::-webkit-scrollbar {
-        display: none;
-        width: 0 !important;
-    }
-
-    @media (max-width: 991.98px) {
+        /* Sidebar optimizations */
         .app-menu {
-            width: 100% !important;
+            width: 240px !important;
+            max-width: 240px !important;
+            height: 100vh !important;
+            position: fixed;
+            overflow: hidden;
+        }
+
+        .app-menu .navbar-nav {
+            font-size: 0.8rem !important;
+        }
+
+        .app-menu .nav-link {
+            font-size: 0.9rem !important;
+            padding: 0.5rem 1rem !important;
+        }
+
+        .app-menu .nav-link i {
+            font-size: 0.9rem !important;
+            margin-right: 0.5rem !important;
+        }
+
+        .app-menu .menu-dropdown .nav-link {
+            font-size: 0.75rem !important;
+            padding: 0.4rem 1.5rem !important;
+        }
+
+        .app-menu .menu-title {
+            font-size: 1.9rem !important;
+            padding: 0.5rem 1rem !important;
+        }
+
+        .navbar-brand-box .logo img {
+            max-width: 80px !important;
             height: auto !important;
         }
 
         .main-content {
-            margin-left: 0 !important;
+            margin-left: 240px !important;
         }
 
+        /* Scrollbar styling for sidebar - HIDDEN but scrollable */
         #scrollbar {
-            height: auto;
-            max-height: 70vh;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+            padding-bottom: 20px;
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE and Edge */
         }
-    }
-</style>
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        #scrollbar::-webkit-scrollbar {
+            display: none;
+            width: 0 !important;
+        }
+
+        @media (max-width: 991.98px) {
+            .app-menu {
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            #scrollbar {
+                height: auto;
+                max-height: 70vh;
+            }
+        }
+    </style>
     @stack('styles')
 </head>
 
@@ -130,12 +133,14 @@
     <audio id="subscriptionAlertSound" src="{{ asset('assets/assets/alert.mp3') }}" preload="auto"></audio>
 
     <!-- Notification Toasts -->
-    <div id="order-toast" style="display:none; position:fixed; top:20px; right:20px; background:#198754; color:#fff; padding:12px 20px; border-radius:6px; z-index:9999;">
+    <div id="order-toast"
+        style="display:none; position:fixed; top:20px; right:20px; background:#198754; color:#fff; padding:12px 20px; border-radius:6px; z-index:9999;">
         🛒 <strong>New order received!</strong>
         <a href="{{ route('admin.orders.index') }}" style="color:#fff; text-decoration:underline;">View</a>
     </div>
 
-    <div id="subscription-toast" style="display:none; position:fixed; top:60px; right:20px; background:#ffc107; color:#333; padding:12px 20px; border-radius:6px; z-index:9999;">
+    <div id="subscription-toast"
+        style="display:none; position:fixed; top:60px; right:20px; background:#ffc107; color:#333; padding:12px 20px; border-radius:6px; z-index:9999;">
         📝 <strong>New subscription received!</strong>
         <a href="{{ route('admin.subscriptions.index') }}" style="color:#333; text-decoration:underline;">View</a>
     </div>
@@ -168,7 +173,9 @@
                             </a>
                         </div>
 
-                        <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger" id="topnav-hamburger-icon">
+                        <button type="button"
+                            class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger"
+                            id="topnav-hamburger-icon">
                             <span class="hamburger-icon">
                                 <span></span>
                                 <span></span>
@@ -179,11 +186,15 @@
 
                     <div class="d-flex align-items-center">
                         <div class="dropdown ms-sm-3 header-item topbar-user">
-                            <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown"
+                                aria-haspopup="true" aria-expanded="false">
                                 <span class="d-flex align-items-center">
-                                    <img class="rounded-circle header-profile-user" src="{{ asset('assets/assets/images/users/avatar-1.jpg') }}" alt="Header Avatar">
+                                    <img class="rounded-circle header-profile-user"
+                                        src="{{ asset('assets/assets/images/users/avatar-1.jpg') }}"
+                                        alt="Header Avatar">
                                     <span class="text-start ms-xl-2">
-                                        <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{ Auth::guard('admin')->user()->name }}</span>
+                                        <span
+                                            class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{ Auth::guard('admin')->user()->name }}</span>
                                         <span class="d-none d-xl-block ms-1 fs-12 user-name-sub-text">Admin</span>
                                     </span>
                                 </span>
@@ -234,7 +245,8 @@
                         <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="" height="100px" width="100px">
                     </span>
                 </a>
-                <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover" id="vertical-hover">
+                <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"
+                    id="vertical-hover">
                     <i class="ri-record-circle-line"></i>
                 </button>
             </div>
@@ -252,48 +264,60 @@
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link menu-link" href="#manageMembers" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="manageMembers">
+                            <a class="nav-link menu-link" href="#manageMembers" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="manageMembers">
                                 <i class="ri-pages-line"></i> <span data-key="t-pages">Manage Users</span>
                             </a>
                             <div class="collapse menu-dropdown" id="manageMembers">
                                 <ul class="nav nav-sm flex-column">
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.customers.index') }}" class="nav-link" data-key="t-starter">Customer</a>
+                                        <a href="{{ route('admin.customers.index') }}" class="nav-link"
+                                            data-key="t-starter">Customer</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.contacts.index') }}" class="nav-link" data-key="t-team">Contact Us Enquiries</a>
+                                        <a href="{{ route('admin.contacts.index') }}" class="nav-link"
+                                            data-key="t-team">Contact Us Enquiries</a>
                                     </li>
+
+
                                 </ul>
                             </div>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link menu-link" href="#pageContent" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="pageContent">
+                            <a class="nav-link menu-link" href="#pageContent" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="pageContent">
                                 <i class="ri-rocket-line"></i> <span data-key="t-landing">Page Content</span>
                             </a>
                             <div class="collapse menu-dropdown" id="pageContent">
                                 <ul class="nav nav-sm flex-column">
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.testimonials.index') }}" class="nav-link" data-key="t-one-page">Testimonials</a>
+                                        <a href="{{ route('admin.testimonials.index') }}" class="nav-link"
+                                            data-key="t-one-page">Testimonials</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.banners.index') }}" class="nav-link" data-key="t-one-page">Banners</a>
+                                        <a href="{{ route('admin.banners.index') }}" class="nav-link"
+                                            data-key="t-one-page">Banners</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.policies.index') }}" class="nav-link" data-key="t-job">All Policies</a>
+                                        <a href="{{ route('admin.policies.index') }}" class="nav-link"
+                                            data-key="t-job">All Policies</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.policies.create') }}" class="nav-link" data-key="t-job">Create Policy</a>
+                                        <a href="{{ route('admin.policies.create') }}" class="nav-link"
+                                            data-key="t-job">Create Policy</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.faqs.index') }}" class="nav-link" data-key="t-job">FAQs</a>
+                                        <a href="{{ route('admin.faqs.index') }}" class="nav-link"
+                                            data-key="t-job">FAQs</a>
                                     </li>
                                 </ul>
                             </div>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link menu-link" href="#orders" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="orders">
+                            <a class="nav-link menu-link" href="#orders" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="orders">
                                 <i class="ri-rocket-line"></i> <span data-key="t-landing">Orders</span>
                             </a>
                             <div class="collapse menu-dropdown" id="orders">
@@ -301,61 +325,81 @@
                                     <li class="nav-item">
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.orders.index') }}" class="nav-link" data-key="t-nft-landing">Orders List</a>
+                                        <a href="{{ route('admin.orders.index') }}" class="nav-link"
+                                            data-key="t-nft-landing">Orders List</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.orders.ready') }}" class="nav-link" data-key="t-job">Ready To Dispatch</a>
+                                        <a href="{{ route('admin.orders.ready') }}" class="nav-link"
+                                            data-key="t-job">Ready To Dispatch</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.orders.cancelled') }}" class="nav-link" data-key="t-job">Cancelled</a>
+                                        <a href="{{ route('admin.orders.cancelled') }}" class="nav-link"
+                                            data-key="t-job">Cancelled</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.orders.delivered') }}" class="nav-link" data-key="t-job">Delivered</a>
+                                        <a href="{{ route('admin.orders.delivered') }}" class="nav-link"
+                                            data-key="t-job">Delivered</a>
                                     </li>
                                 </ul>
                             </div>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link menu-link" href="#product" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="product">
+                            <a class="nav-link menu-link" href="#product" data-bs-toggle="collapse" role="button"
+                                aria-expanded="false" aria-controls="product">
                                 <i class="ri-stack-line"></i> <span data-key="t-advance-ui">Product</span>
                             </a>
                             <div class="collapse menu-dropdown" id="product">
                                 <ul class="nav nav-sm flex-column">
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.categories.index') }}" class="nav-link" data-key="t-sweet-alerts">Category</a>
+                                        <a href="{{ route('admin.categories.index') }}" class="nav-link"
+                                            data-key="t-sweet-alerts">Category</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.subcategories.index') }}" class="nav-link" data-key="t-nestable-list">Sub category</a>
+                                        <a href="{{ route('admin.subcategories.index') }}" class="nav-link"
+                                            data-key="t-nestable-list">Sub category</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.products.index') }}" class="nav-link" data-key="t-nestable-list">Products</a>
+                                        <a href="{{ route('admin.products.index') }}" class="nav-link"
+                                            data-key="t-nestable-list">Products</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.boxes.index') }}" class="nav-link" data-key="t-nestable-list">Boxes</a>
+                                        <a href="{{ route('admin.payments.index') }}" class="nav-link">
+                                            </i>Advance Payments
+                                        </a>
                                     </li>
-                                     <li class="nav-item">
-                                        <a href="{{ route('block.index') }}" class="nav-link" data-key="t-nestable-list">Block Management</a>
+
+                                    <li class="nav-item">
+                                        <a href="{{ route('admin.boxes.index') }}" class="nav-link"
+                                            data-key="t-nestable-list">Boxes</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('block.index') }}" class="nav-link"
+                                            data-key="t-nestable-list">Block Management</a>
                                     </li>
                                 </ul>
                             </div>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link menu-link" href="#manageSubscriptionMenu" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="manageSubscriptionMenu">
+                            <a class="nav-link menu-link" href="#manageSubscriptionMenu" data-bs-toggle="collapse"
+                                role="button" aria-expanded="false" aria-controls="manageSubscriptionMenu">
                                 <i class="ri-pages-line"></i>
                                 <span data-key="t-pages">Manage Subscription</span>
                             </a>
                             <div class="collapse menu-dropdown" id="manageSubscriptionMenu">
                                 <ul class="nav nav-sm flex-column">
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.subscriptions.index') }}" class="nav-link" data-key="t-starter">Admin Subscription</a>
+                                        <a href="{{ route('admin.subscriptions.index') }}" class="nav-link"
+                                            data-key="t-starter">Admin Subscription</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.newsletters.index') }}" class="nav-link" data-key="t-team">Newsletter Subscription List</a>
+                                        <a href="{{ route('admin.newsletters.index') }}" class="nav-link"
+                                            data-key="t-team">Newsletter Subscription List</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('admin.subscriptions.list') }}" class="nav-link" data-key="t-team">User Subscription List</a>
+                                        <a href="{{ route('admin.subscriptions.list') }}" class="nav-link"
+                                            data-key="t-team">User Subscription List</a>
                                     </li>
                                 </ul>
                             </div>
@@ -363,7 +407,8 @@
 
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.contact-details.index') }}">
-                                <i class="ri-contacts-book-3-line"></i> <span data-key="t-advance-ui">Website Settings</span>
+                                <i class="ri-contacts-book-3-line"></i> <span data-key="t-advance-ui">Website
+                                    Settings</span>
                             </a>
                         </li>
 
@@ -375,13 +420,15 @@
 
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.change-credentials') }}">
-                                <i class="mdi mdi-key-outline"></i> <span data-key="t-advance-ui">Change Credentials</span>
+                                <i class="mdi mdi-key-outline"></i> <span data-key="t-advance-ui">Change
+                                    Credentials</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <form method="POST" action="{{ route('admin.logout') }}">
                                 @csrf
-                                <button type="submit" class="nav-link btn btn-link p-0" style="border: none; background: none;">
+                                <button type="submit" class="nav-link btn btn-link p-0"
+                                    style="border: none; background: none;">
                                     <i class="ri-logout-box-r-line"></i>
                                     <span data-key="t-advance-ui">Logout</span>
                                 </button>
@@ -451,9 +498,9 @@
     <script src="{{ asset('assets/js/admin-delete.js') }}"></script>
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Mobile sidebar toggle
-            $('#topnav-hamburger-icon').on('click', function() {
+            $('#topnav-hamburger-icon').on('click', function () {
                 $('body').toggleClass('sidebar-enable');
                 if ($(window).width() >= 992) {
                     $('body').toggleClass('vertical-collpsed');
@@ -463,7 +510,7 @@
             });
 
             // Close sidebar on mobile when clicking outside
-            $(document).on('click', function(e) {
+            $(document).on('click', function (e) {
                 if ($(window).width() < 992) {
                     if (!$(e.target).closest('.app-menu, #topnav-hamburger-icon').length) {
                         $('body').removeClass('sidebar-enable');
@@ -472,7 +519,7 @@
             });
 
             // Submenu toggle for mobile
-            $('.menu-link[data-bs-toggle="collapse"]').on('click', function(e) {
+            $('.menu-link[data-bs-toggle="collapse"]').on('click', function (e) {
                 if ($(window).width() < 992) {
                     e.preventDefault();
                     const target = $($(this).attr('href'));
@@ -509,19 +556,19 @@
                     if (!data || typeof data.latest_id === 'undefined' || isNaN(parseInt(data.latest_id))) return;
                     const newId = parseInt(data.latest_id);
                     const lastId = type === 'order' ? lastOrderId : lastSubscriptionId;
-                    
+
                     if (newId > lastId) {
                         console.log(`${type} notification triggered for ID:`, newId);
                         playSound(type);
                         showPopup(type);
-                        
+
                         if ('speechSynthesis' in window) {
                             const msg = new SpeechSynthesisUtterance(
                                 `New ${type} received on Amit Dairy and Sweets.`);
                             msg.lang = 'en-IN';
                             window.speechSynthesis.speak(msg);
                         }
-                        
+
                         if (type === 'order') {
                             lastOrderId = newId;
                         } else {
@@ -541,4 +588,5 @@
 
     @stack('scripts')
 </body>
+
 </html>

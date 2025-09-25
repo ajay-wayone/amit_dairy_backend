@@ -1,8 +1,7 @@
 <?php
+
 namespace App\Models;
 
-use App\Models\OrderItem;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,9 +10,11 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
+        'customer_id',
+        'user_id',
         'order_code',
-        'user_id',       
-        'customer_name', 
+        'order_id',               // ← new
+        'customer_name',
         'customer_email',
         'customer_phone',
         'delivery_address',
@@ -27,37 +28,49 @@ class Order extends Model
         'payment_status',
         'order_status',
         'order_notes',
-        'delivery_date',
-        'delivered_at',
         'number_of_boxes',
         'receiver_name',
         'receiver_phone',
+        'delivery_date',
+        'delivered_at',
         'latitude',
         'longitude',
         'delivery_time',
+        'cart_data',              // JSON field
+        'address_details',
+        'house_block',
+        'area_road',
+        'save_as',
     ];
 
     protected $casts = [
-        'subtotal'        => 'decimal:2',
+        'subtotal' => 'decimal:2',
         'delivery_charge' => 'decimal:2',
-        'total_amount'    => 'decimal:2',
-        'delivery_date'   => 'datetime',
-        'delivered_at'    => 'datetime',
+        'total_amount' => 'decimal:2',
+        'delivery_date' => 'datetime',
+        'delivered_at' => 'datetime',
+        'cart_data' => 'array',    // automatically JSON decode/encode
     ];
 
-    // Relation to User model
+    // Relation to User
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    // Relation to Customer (optional)
+    public function customer()
+    {
+        return $this->belongsTo(User::class, 'customer_id');
+    }
+
     // Relation to OrderItems
     public function orderItems()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(OrderItem::class, 'order_id');
     }
 
-    // Alias relation
+    // Alias
     public function items()
     {
         return $this->hasMany(OrderItem::class, 'order_id');
