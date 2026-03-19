@@ -7,21 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Address extends Model
 {
-use HasFactory;
+    protected $table = 'address'; // table ka exact name
 
-protected $fillable = [
-'user_id',
-'house_no',
-'apartment',
-'area',
-'save_as',
-'receiver_name',
-'receiver_phone',
-];
+    protected $fillable = [
+        'user_id',
+        'full_name',
+        'phone',
+        'address_line',
+        'city',
+        'pincode',
+    ];
 
-// Relation with User
-public function user()
-{
-return $this->belongsTo(User::class);
-}
+    public $timestamps = false;
+
+
+
+
+    // Relation with User
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

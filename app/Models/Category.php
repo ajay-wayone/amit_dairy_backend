@@ -46,8 +46,8 @@ class Category extends Model
     // ✅ Accessors
     public function getImageUrlAttribute()
     {
-        return $this->category_image 
-            ? asset('storage/' . $this->category_image) 
+        return $this->category_image
+            ? asset('storage/' . $this->category_image)
             : null;
     }
 

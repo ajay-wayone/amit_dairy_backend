@@ -58,17 +58,17 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         $request->validate([
-            'order_status'   => 'required|in:pending,confirmed,ready,dispatched,delivered,cancelled',
+            'order_status' => 'required|in:pending,confirmed,ready,dispatched,delivered,cancelled',
             'payment_status' => 'required|in:pending,completed,failed',
-            'order_notes'    => 'nullable|string',
-            'delivery_date'  => 'nullable|date',
+            'order_notes' => 'nullable|string',
+            'delivery_date' => 'nullable|date',
         ]);
 
         try {
             $data = [
-                'order_status'   => $request->order_status,
+                'order_status' => $request->order_status,
                 'payment_status' => $request->payment_status,
-                'order_notes'    => $request->order_notes,
+                'order_notes' => $request->order_notes,
             ];
 
             if ($request->delivery_date) {
@@ -83,7 +83,8 @@ class OrderController extends Controller
 
             return redirect()->route('admin.orders.index')
                 ->with('success', 'Order updated successfully!');
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return back()->withInput()
                 ->with('error', 'Failed to update order: ' . $e->getMessage());
         }
@@ -98,7 +99,8 @@ class OrderController extends Controller
 
             return redirect()->route('admin.orders.index')
                 ->with('success', 'Order deleted successfully!');
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return back()->with('error', 'Failed to delete order: ' . $e->getMessage());
         }
     }
@@ -121,9 +123,10 @@ class OrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Order status updated successfully!',
-                'status'  => $request->status,
+                'status' => $request->status,
             ]);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update order status!',

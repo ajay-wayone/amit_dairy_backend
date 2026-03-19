@@ -57,7 +57,7 @@
                                             @endif
                                         </td>
 
-                                        <td>₹{{ number_format($subscription->amount ?? 0, 2) }}</td>
+                                        <td>₹{{ number_format($subscription->price ?? 0, 2) }}</td>
                                         <td>{{ !empty($subscription->valid_days) ? $subscription->valid_days : 'NA' }}</td>
 
                                         <td>{{ $subscription->description ? \Illuminate\Support\Str::words($subscription->description, 7, '...') : 'N/A' }}

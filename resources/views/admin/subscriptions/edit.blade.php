@@ -17,7 +17,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="plan_name" class="form-label small">Plan Name *</label>
-                                <input type="text" name="plan_name" id="plan_name" placeholder="Enter The Plan_Name..."
+                                <input type="text" name="title" id="plan_name" placeholder="Enter The Plan_Name..."
                                     class="form-control form-control-sm @error('plan_name') is-invalid @enderror"
                                     value="{{ old('plan_name', $subscription->plan_name) }}">
                                 @error('plan_name')
@@ -41,7 +41,7 @@
 
                             <div class="col-md-6">
                                 <label for="amount" class="form-label small">Amount (₹) *</label>
-                                <input type="number" name="amount" id="amount" placeholder="Enter the Amount..."
+                                <input type="number" name="price" id="amount" placeholder="Enter the Amount..."
                                     class="form-control form-control-sm @error('amount') is-invalid @enderror"
                                     value="{{ old('amount', $subscription->amount) }}" step="0.01">
                                 @error('amount')
@@ -51,7 +51,7 @@
 
                             <div class="col-md-6">
                                 <label for="is_active" class="form-label small">Status *</label>
-                                <select name="is_active" id="is_active"
+                                <select name="status" id="is_active"
                                     class="form-select form-select-sm @error('is_active') is-invalid @enderror">
                                     <option value="1"
                                         {{ old('is_active', $subscription->is_active) == '1' ? 'selected' : '' }}>Active

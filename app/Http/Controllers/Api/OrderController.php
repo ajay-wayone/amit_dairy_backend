@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+use Razorpay\Api\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
@@ -72,46 +73,194 @@ class OrderController extends Controller
     /**
      * Create a new order
      */
+    // public function store(Request $request)
+    // {
+    //     $user = $request->user();
+
+    //     $validator = Validator::make($request->all(), [
+    //         'payment_method' => 'required|in:cod,online,card',
+    //         'delivery_charge' => 'nullable|numeric|min:0',
+    //         'subtotal' => 'nullable|numeric|min:0',
+    //         'total_amount' => 'nullable|numeric|min:0',
+    //         'order_notes' => 'nullable|string',
+    //         'number_of_boxes' => 'nullable|integer|min:1',
+    //         'receiver_name' => 'nullable|string',
+    //         'receiver_phone' => 'nullable|string',
+    //         'delivery_time' => 'nullable|string',
+    //         'delivery_address' => 'nullable|string',
+    //         'delivery_city' => 'nullable|string',
+    //         'delivery_state' => 'nullable|string',
+    //         'delivery_pincode' => 'nullable|string',
+    //         'cart_data' => 'required|array',
+    //         'house_block' => 'nullable|string',
+    //         'area_road' => 'nullable|string',
+    //         'save_as' => 'nullable|string',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Validation failed',
+    //             'errors' => $validator->errors(),
+    //         ], 422);
+    //     }
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $subtotal = $request->subtotal ?? 0;
+    //         $delivery_charge = $request->delivery_charge ?? 0;
+    //         $total_amount = $request->total_amount ?? ($subtotal + $delivery_charge);
+
+    //         // ✅ Prepare cart data with product images
+    //         $cartDataWithImages = [];
+    //         foreach ($request->cart_data as $item) {
+    //             $product = Product::find($item['product_id']);
+    //             if ($product) {
+    //                 $cartDataWithImages[] = [
+    //                     'product_id' => $product->id,
+    //                     'product_name' => $product->name,
+    //                     'quantity' => $item['quantity'],
+    //                     'price' => $item['price'],
+    //                     'total' => $item['price'] * $item['quantity'],
+    //                     'product_image' => $product->image ? url($product->image) : null,
+    //                     'product_sku' => $product->sku ?? null,
+    //                 ];
+    //             }
+    //         }
+
+    //         // Create order
+    //         $order = Order::create([
+    //             'user_id' => $user->id,
+    //             'order_code' => 'ORD-' . time() . '-' . $user->id,
+    //             'order_id' => 'ORD-' . time() . '-' . $user->id,
+    //             'customer_name' => $request->customer_name ?? $user->name,
+    //             'customer_email' => $request->customer_email ?? $user->email,
+    //             'customer_phone' => $request->customer_phone ?? $user->phone,
+    //             'delivery_address' => $request->delivery_address ?? '',
+    //             'delivery_city' => $request->delivery_city ?? '',
+    //             'delivery_state' => $request->delivery_state ?? '',
+    //             'delivery_pincode' => $request->delivery_pincode ?? '',
+    //             'subtotal' => $subtotal,
+    //             'delivery_charge' => $delivery_charge,
+    //             'total_amount' => $total_amount,
+    //             'payment_method' => $request->payment_method,
+    //             'payment_status' => $request->payment_status ?? 'pending',
+    //             'order_status' => $request->order_status ?? 'pending',
+    //             'order_notes' => $request->order_notes ?? null,
+    //             'number_of_boxes' => $request->number_of_boxes ?? 1,
+    //             'cart_data' => json_encode($cartDataWithImages),
+    //             'address_details' => $request->address_details ?? null,
+    //             'house_block' => $request->house_block ?? null,
+    //             'area_road' => $request->area_road ?? null,
+    //             'save_as' => $request->save_as ?? null,
+    //             'receiver_name' => $request->receiver_name ?? $user->name,
+    //             'receiver_phone' => $request->receiver_phone ?? $user->phone,
+    //             'delivery_time' => $request->delivery_time ?? null,
+    //             'delivered_at' => $request->delivered_at ?? null,
+    //         ]);
+
+    //         // ✅ Save order items
+    //         foreach ($cartDataWithImages as $item) {
+    //             OrderItem::create([
+    //                 'order_id' => $order->id,
+    //                 'user_id' => $user->id,
+    //                 'product_id' => $item['product_id'],
+    //                 'product_name' => $item['product_name'],
+    //                 'product_sku' => $item['product_sku'] ?? null,
+    //                 'price' => $item['price'],
+    //                 'quantity' => $item['quantity'],
+    //                 'total' => $item['total'],
+    //             ]);
+    //         }
+
+    //         $this->notifyAdmins($order);
+
+    //         DB::commit();
+
+    //         $order->cart_data = $cartDataWithImages;
+
+    //         return response()->json([
+    //             'status' => true,
+    //             'message' => 'Order created successfully',
+    //             'data' => [
+    //                 'order' => $order->load('orderItems.product'),
+    //                 'order_code' => $order->order_code
+    //             ]
+    //         ], 201);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollback();
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Something went wrong!',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
     public function store(Request $request)
     {
+        \Log::info('OrderController store called', [
+            'headers' => $request->headers->all(),
+            'bearer_token' => $request->bearerToken(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
         $user = $request->user();
+
+        \Log::info('User authentication check', [
+            'user_id' => $user ? $user->id : null,
+            'user_email' => $user ? $user->email : null,
+        ]);
+
+        if (!$user) {
+            \Log::error('Authentication failed: No user found');
+            return response()->json([
+                'status' => false,
+                'message' => 'Authentication required'
+            ], 401);
+        }
 
         $validator = Validator::make($request->all(), [
             'payment_method' => 'required|in:cod,online,card',
-            'delivery_charge' => 'nullable|numeric|min:0',
-            'subtotal' => 'nullable|numeric|min:0',
-            'total_amount' => 'nullable|numeric|min:0',
-            'order_notes' => 'nullable|string',
-            'number_of_boxes' => 'nullable|integer|min:1',
-            'receiver_name' => 'nullable|string',
-            'receiver_phone' => 'nullable|string',
-            'delivery_time' => 'nullable|string',
+            'cart_data' => 'required|array',
             'delivery_address' => 'nullable|string',
             'delivery_city' => 'nullable|string',
             'delivery_state' => 'nullable|string',
             'delivery_pincode' => 'nullable|string',
-            'cart_data' => 'required|array',
+            'address_details' => 'nullable|string',
             'house_block' => 'nullable|string',
             'area_road' => 'nullable|string',
             'save_as' => 'nullable|string',
+            'order_notes' => 'nullable|string',
+            'number_of_boxes' => 'nullable|integer',
+            'receiver_name' => 'nullable|string',
+            'receiver_phone' => 'nullable|string',
+            'delivery_time' => 'nullable|string',
+            'latitude' => 'nullable|string',
+            'longitude' => 'nullable|string',
+            'razorpay_payment_id' => 'nullable|string',
+            'razorpay_signature' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
+                'errors' => $validator->errors()
             ], 422);
         }
 
         DB::beginTransaction();
 
         try {
+
             $subtotal = $request->subtotal ?? 0;
             $delivery_charge = $request->delivery_charge ?? 0;
-            $total_amount = $request->total_amount ?? ($subtotal + $delivery_charge);
+            $total_amount = $subtotal + $delivery_charge;
 
-            // ✅ Prepare cart data with product images
+            // 🟢 Prepare cart data
             $cartDataWithImages = [];
             foreach ($request->cart_data as $item) {
                 $product = Product::find($item['product_id']);
@@ -123,19 +272,76 @@ class OrderController extends Controller
                         'price' => $item['price'],
                         'total' => $item['price'] * $item['quantity'],
                         'product_image' => $product->image ? url($product->image) : null,
-                        'product_sku' => $product->sku ?? null,
                     ];
                 }
             }
 
-            // Create order
+            // 🔴 Razorpay Order Create (Only Online)
+            $razorpayOrderId = null;
+
+            if (in_array($request->payment_method, ['online', 'card'])) {
+                \Log::info('Creating Razorpay order', [
+                    'payment_method' => $request->payment_method,
+                    'total_amount' => $total_amount,
+                    'razorpay_key' => config('services.razorpay.key') ? 'SET' : 'NOT SET',
+                    'razorpay_secret' => config('services.razorpay.secret') ? 'SET' : 'NOT SET',
+                ]);
+
+                try {
+                    $api = new Api(
+                        config('services.razorpay.key'),
+                        config('services.razorpay.secret')
+                    );
+
+                    $razorpayOrder = $api->order->create([
+                        'receipt' => 'order_rcpt_' . time(),
+                        'amount' => $total_amount * 100, // paise
+                        'currency' => 'INR'
+                    ]);
+
+                    $razorpayOrderId = $razorpayOrder['id'];
+                    \Log::info('Razorpay order created successfully', ['razorpay_order_id' => $razorpayOrderId]);
+                } catch (\Exception $e) {
+                    \Log::error('Razorpay order creation failed', [
+                        'error' => $e->getMessage(),
+                        'payment_method' => $request->payment_method,
+                    ]);
+                    throw $e;
+                }
+            }
+
+            // 🟢 Create Order
+            \Log::info('About to create order with data', [
+                'user_id' => $user->id,
+                'customer_id' => $user->id,
+                'order_code' => 'ORD-' . time(),
+                'order_id' => 'ORD-' . time() . '-' . $user->id,
+                'delivery_address' => $request->delivery_address ?? '',
+                'delivery_city' => $request->delivery_city ?? '',
+                'delivery_state' => $request->delivery_state ?? '',
+                'delivery_pincode' => $request->delivery_pincode ?? '',
+                'address_details' => $request->address_details ?? null,
+                'house_block' => $request->house_block ?? null,
+                'area_road' => $request->area_road ?? null,
+                'save_as' => $request->save_as ?? null,
+                'order_notes' => $request->order_notes ?? null,
+                'number_of_boxes' => $request->number_of_boxes ?? null,
+                'receiver_name' => $request->receiver_name ?? null,
+                'receiver_phone' => $request->receiver_phone ?? null,
+                'delivery_time' => $request->delivery_time ?? null,
+                'latitude' => $request->latitude ?? null,
+                'longitude' => $request->longitude ?? null,
+                'razorpay_payment_id' => $request->razorpay_payment_id ?? '',
+                'razorpay_signature' => $request->razorpay_signature ?? '',
+            ]);
             $order = Order::create([
                 'user_id' => $user->id,
-                'order_code' => 'ORD-' . time() . '-' . $user->id,
+                'customer_id' => $user->id, // Assuming user and customer are the same
+                'order_code' => 'ORD-' . time(),
                 'order_id' => 'ORD-' . time() . '-' . $user->id,
-                'customer_name' => $request->customer_name ?? $user->name,
-                'customer_email' => $request->customer_email ?? $user->email,
-                'customer_phone' => $request->customer_phone ?? $user->phone,
+                'customer_name' => $user->full_name ?? $user->name ?? 'Customer',
+                'customer_email' => $user->email,
+                'customer_phone' => $user->phone,
                 'delivery_address' => $request->delivery_address ?? '',
                 'delivery_city' => $request->delivery_city ?? '',
                 'delivery_state' => $request->delivery_state ?? '',
@@ -144,59 +350,53 @@ class OrderController extends Controller
                 'delivery_charge' => $delivery_charge,
                 'total_amount' => $total_amount,
                 'payment_method' => $request->payment_method,
-                'payment_status' => $request->payment_status ?? 'pending',
-                'order_status' => $request->order_status ?? 'pending',
-                'order_notes' => $request->order_notes ?? null,
-                'number_of_boxes' => $request->number_of_boxes ?? 1,
+                'payment_status' => 'pending',
+                'order_status' => 'pending',
                 'cart_data' => json_encode($cartDataWithImages),
                 'address_details' => $request->address_details ?? null,
                 'house_block' => $request->house_block ?? null,
                 'area_road' => $request->area_road ?? null,
                 'save_as' => $request->save_as ?? null,
-                'receiver_name' => $request->receiver_name ?? $user->name,
-                'receiver_phone' => $request->receiver_phone ?? $user->phone,
+                'order_notes' => $request->order_notes ?? null,
+                'number_of_boxes' => $request->number_of_boxes ?? null,
+                'receiver_name' => $request->receiver_name ?? null,
+                'receiver_phone' => $request->receiver_phone ?? null,
                 'delivery_time' => $request->delivery_time ?? null,
-                'delivered_at' => $request->delivered_at ?? null,
+                'latitude' => $request->latitude ?? null,
+                'longitude' => $request->longitude ?? null,
+                'razorpay_order_id' => $razorpayOrderId,
+                'razorpay_payment_id' => $request->razorpay_payment_id ?? '',
+                'razorpay_signature' => $request->razorpay_signature ?? '',
             ]);
-
-            // ✅ Save order items
-            foreach ($cartDataWithImages as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'user_id' => $user->id,
-                    'product_id' => $item['product_id'],
-                    'product_name' => $item['product_name'],
-                    'product_sku' => $item['product_sku'] ?? null,
-                    'price' => $item['price'],
-                    'quantity' => $item['quantity'],
-                    'total' => $item['total'],
-                ]);
-            }
-
-            $this->notifyAdmins($order);
 
             DB::commit();
 
-            $order->cart_data = $cartDataWithImages;
-
             return response()->json([
                 'status' => true,
-                'message' => 'Order created successfully',
+                'message' => 'Order created',
                 'data' => [
-                    'order' => $order->load('orderItems.product'),
-                    'order_code' => $order->order_code
+                    'order_id' => $order->id,
+                    'razorpay_order_id' => $razorpayOrderId,
+                    'amount' => $total_amount,
+                    'currency' => 'INR'
                 ]
             ], 201);
 
         } catch (\Exception $e) {
-            DB::rollback();
+            DB::rollBack();
+            \Log::error('Order creation failed', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id ?? null,
+                'payment_method' => $request->payment_method ?? null,
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'status' => false,
-                'message' => 'Something went wrong!',
-                'error' => $e->getMessage()
+                'message' => $e->getMessage()
             ], 500);
         }
     }
+
 
     /**
      * Get order details

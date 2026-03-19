@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+
+    'razorpay' => [
+        'key' => env('RAZORPAY_KEY_ID'),
+        'secret' => env('RAZORPAY_KEY_SECRET'),
+    ],
+
+
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'key' => env('STRIPE_PUBLISHABLE_KEY'),
+    ],
+
+
+
+
 ];

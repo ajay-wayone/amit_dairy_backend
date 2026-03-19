@@ -7,132 +7,244 @@ use App\Models\Wishlist;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+
 
 class WishlistController extends Controller
 {
-    /**
-     * Get user's wishlist items
-     */
-    public function index(Request $request)
+
+    public function getWishlist()
     {
         try {
-            $user = $request->user();
-            
-            $wishlistItems = Wishlist::with(['product:id,name,price,image,description,stock_quantity,is_active'])
-                ->where('user_id', $user->id)
-                ->where('is_active', true)
+            $wishlist = DB::table('wishlists')
+                ->join('products', 'products.id', '=', 'wishlists.product_id')
+                ->where('wishlists.is_active', 1)
+                ->select(
+                    'wishlists.id as wishlist_id',
+                    'wishlists.user_id',
+                    'wishlists.product_id',
+
+                    'products.product_code',
+                    'products.slug',
+                    'products.category_id',
+                    'products.subcategory_id',
+                    'products.name',
+                    'products.description',
+                    'products.short_description',
+                    'products.price',
+                    'products.discount_price',
+                    'products.weight',
+                    'products.weight_type',
+                    'products.product_image',
+                    'products.status'
+                )
+                ->orderBy('wishlists.id', 'desc')
                 ->get();
 
+            if ($wishlist->isEmpty()) {
+                return response()->json([
+                    'code' => 404,
+                    'message' => 'No wishlist data found',
+                    'data' => []
+                ], 404);
+            }
+
             return response()->json([
-                'status' => true,
-                'message' => 'Wishlist items retrieved successfully',
-                'data' => [
-                    'items' => $wishlistItems,
-                    'total_items' => $wishlistItems->count()
-                ]
-            ]);
+                'code' => 200,
+                'message' => 'All wishlist fetched successfully',
+                'data' => $wishlist
+            ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'status' => false,
-                'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'code' => 500,
+                'message' => 'Internal Server Error',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
+
+
+
+
 
     /**
      * Add item to wishlist
      */
-    public function addToWishlist(Request $request)
+
+    // public function addWishlist(Request $request)
+    // {
+    //     // ✅ Validation
+    //     $validator = Validator::make($request->all(), [
+    //         'product_id' => 'required|numeric'
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json([
+    //             'code' => 401,
+    //             'message' => $validator->errors()->first()
+    //         ], 401);
+    //     }
+
+    //     try {
+    //         // ⚠️ TEMP user_id (jab tak login/auth nahi hai)
+    //         $user_id = 1;
+
+    //         // ✅ Check duplicate wishlist
+    //         $alreadyExists = DB::table('wishlists')
+    //             ->where('user_id', $user_id)
+    //             ->where('product_id', $request->product_id)
+    //             ->where('is_active', 1)
+    //             ->first();
+
+    //         if ($alreadyExists) {
+    //             return response()->json([
+    //                 'code' => 409,
+    //                 'message' => 'Product already in wishlist'
+    //             ], 409);
+    //         }
+
+    //         // ✅ Insert wishlist
+    //         DB::table('wishlists')->insert([
+    //             'user_id' => $user_id,
+    //             'product_id' => $request->product_id,
+    //             'status' => 1,
+    //             'is_active' => 1,
+    //             'created_at' => now(),
+    //             'updated_at' => now()
+    //         ]);
+
+    //         return response()->json([
+    //             'code' => 200,
+    //             'message' => 'Product added to wishlist successfully'
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'code' => 500,
+    //             'message' => 'Internal Server Error',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
+    public function addWishlist(Request $request)
     {
+        // ✅ Validation
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|numeric'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => 401,
+                'message' => $validator->errors()->first()
+            ], 401);
+        }
+
         try {
-            $validator = Validator::make($request->all(), [
-                'product_id' => 'required|exists:products,id',
-            ]);
+            // ⚠️ TEMP user_id
+            $user_id = 1;
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
-
-            $user = $request->user();
-            $product = Product::findOrFail($request->product_id);
-
-            // Check if product is already in wishlist
-            $existingWishlistItem = Wishlist::where('user_id', $user->id)
+            // ✅ Check duplicate wishlist
+            $alreadyExists = DB::table('wishlists')
+                ->where('user_id', $user_id)
                 ->where('product_id', $request->product_id)
-                ->where('is_active', true)
+                ->where('is_active', 1)
                 ->first();
 
-            if ($existingWishlistItem) {
+            // ✅ CHANGE HERE (NO ERROR CODE)
+            if ($alreadyExists) {
                 return response()->json([
-                    'status' => false,
-                    'message' => 'Product is already in your wishlist',
-                ], 400);
+                    'code' => 200,
+                    'message' => 'Product already added in wishlist'
+                ], 200);
             }
 
-            // Create new wishlist item
-            $wishlistItem = Wishlist::create([
-                'user_id' => $user->id,
+            // ✅ Insert wishlist
+            DB::table('wishlists')->insert([
+                'user_id' => $user_id,
                 'product_id' => $request->product_id,
-                'is_active' => true
+                'status' => 1,
+                'is_active' => 1,
+                'created_at' => now(),
+                'updated_at' => now()
             ]);
 
             return response()->json([
-                'status' => true,
-                'message' => 'Item added to wishlist successfully',
-                'data' => $wishlistItem->load('product:id,name,price,image,description,stock_quantity,is_active')
-            ], 201);
+                'code' => 200,
+                'message' => 'Product added to wishlist successfully'
+            ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'status' => false,
-                'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'code' => 500,
+                'message' => 'Internal Server Error',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
+
+
+
+
+
+
 
     /**
      * Remove item from wishlist
      */
-    public function removeFromWishlist(Request $request, $id)
+    public function deleteWishlist(Request $request)
     {
+        // ✅ Validation
+        $validator = Validator::make($request->all(), [
+            'wishlist_id' => 'required|numeric'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => 401,
+                'message' => $validator->errors()->first()
+            ], 401);
+        }
+
         try {
-            $user = $request->user();
-            
-            $wishlistItem = Wishlist::where('id', $id)
-                ->where('user_id', $user->id)
-                ->where('is_active', true)
+            // ✅ Check wishlist exists
+            $wishlist = DB::table('wishlists')
+                ->where('id', $request->wishlist_id)
+                ->where('is_active', 1)
                 ->first();
 
-            if (!$wishlistItem) {
+            if (!$wishlist) {
                 return response()->json([
-                    'status' => false,
-                    'message' => 'Wishlist item not found',
+                    'code' => 404,
+                    'message' => 'Wishlist not found'
                 ], 404);
             }
 
-            $wishlistItem->is_active = false;
-            $wishlistItem->save();
+            // ✅ Soft delete (recommended)
+            DB::table('wishlists')
+                ->where('id', $request->wishlist_id)
+                ->update([
+                    'is_active' => 0,
+                    'updated_at' => now()
+                ]);
 
             return response()->json([
-                'status' => true,
-                'message' => 'Item removed from wishlist successfully',
-            ]);
+                'code' => 200,
+                'message' => 'Wishlist deleted successfully'
+            ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'status' => false,
-                'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'code' => 500,
+                'message' => 'Internal Server Error',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
+
 
     /**
      * Clear entire wishlist
@@ -141,7 +253,7 @@ class WishlistController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             Wishlist::where('user_id', $user->id)
                 ->where('is_active', true)
                 ->update(['is_active' => false]);
@@ -167,7 +279,7 @@ class WishlistController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             $wishlistItem = Wishlist::where('user_id', $user->id)
                 ->where('product_id', $productId)
                 ->where('is_active', true)
@@ -198,8 +310,8 @@ class WishlistController extends Controller
     {
         try {
             $user = $request->user();
-            
-            $wishlistItems = Wishlist::with(['product:id,name,price,image,stock_quantity,is_active'])
+
+            $wishlistItems = Wishlist::with(['product:id,name,price,product_image'])
                 ->where('user_id', $user->id)
                 ->where('is_active', true)
                 ->get();
@@ -223,4 +335,4 @@ class WishlistController extends Controller
             ], 500);
         }
     }
-} 
+}

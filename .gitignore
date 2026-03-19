@@ -1,57 +1,48 @@
-<<<<<<< HEAD
-/vendor/
-node_modules/
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
 npm-debug.log
 yarn-error.log
 
-# Laravel 4 specific
-bootstrap/compiled.php
-app/storage/
-
-# Laravel 5 & Lumen specific
-public/storage
-public/hot
-
-# Laravel 5 & Lumen specific with changed public path
-public_html/storage
-public_html/hot
-
-storage/*.key
+# Environment files (IMPORTANT)
 .env
-Homestead.yaml
-Homestead.json
-/.vagrant
-.phpunit.result.cache
+.env.*
+!.env.example
 
-/public/build
-/storage/pail
-.env.backup
-.env.production
-.phpactor.json
-auth.json
-=======
-*.log
-.DS_Store
-.env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
-/.fleet
-/.idea
-/.nova
-/.phpunit.cache
-/.vscode
-/.zed
-/auth.json
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
+# Laravel core
 /vendor
+/node_modules
+
+# Laravel storage
+/storage/*.key
+/storage/logs
+/storage/framework/cache
+/storage/framework/sessions
+/storage/framework/views
+/storage/pail
+
+# Public files
+/public/storage
+/public/hot
+/public/build
+
+# IDE / Editor
+/.idea
+/.vscode
+/.fleet
+/.zed
+
+# Testing
+.phpunit.result.cache
+.phpunit.cache
+
+# Auth & config
+auth.json
+
+# Homestead / Vagrant
 Homestead.json
 Homestead.yaml
-Thumbs.db
->>>>>>> c0f19ab (all files create)
+/.vagrant

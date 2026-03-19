@@ -15,18 +15,68 @@ class CartController extends Controller
     /**
      * Get user's cart items
      */
+    // public function index(Request $request)
+    // {
+    //     try {
+    //         $user = $request->user();
+
+    //         $cartItems = Cart::with(['product:id,name,price,product_image,description'])
+    //             ->where('user_id', $user->id)
+    //             ->where('is_active', true)
+    //             ->get();
+
+    //         $totalItems = $cartItems->sum('quantity');
+    //         $totalAmount = $cartItems->sum('total_price');
+
+    //         return response()->json([
+    //             'status' => true,
+    //             'message' => 'Cart items retrieved successfully',
+    //             'data' => [
+    //                 'items' => $cartItems,
+    //                 'total_items' => $totalItems,
+    //                 'total_amount' => number_format($totalAmount, 2),
+    //                 'item_count' => $cartItems->count()
+    //             ]
+    //         ]);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Something went wrong!',
+    //             'error' => $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
+
+
+
+
     public function index(Request $request)
     {
         try {
             $user = $request->user();
-            
-            $cartItems = Cart::with(['product:id,name,price,product_image,description'])
+
+            $cartItems = Cart::with([
+                'product:id,name,price,product_image,description',
+                'box:id,box_name,box_price,box_image,desc'
+            ])
                 ->where('user_id', $user->id)
                 ->where('is_active', true)
                 ->get();
 
+            // total quantity
             $totalItems = $cartItems->sum('quantity');
-            $totalAmount = $cartItems->sum('total_price');
+
+            // cart items total (without box)
+            $cartAmount = $cartItems->sum('total_price');
+
+            // total box amount (per item box)
+            $boxAmount = $cartItems->sum(function ($item) {
+                return $item->box ? $item->box->box_price : 0;
+            });
+
+            // final amount
+            $finalAmount = $cartAmount + $boxAmount;
 
             return response()->json([
                 'status' => true,
@@ -34,11 +84,13 @@ class CartController extends Controller
                 'data' => [
                     'items' => $cartItems,
                     'total_items' => $totalItems,
-                    'total_amount' => number_format($totalAmount, 2),
+                    'cart_amount' => number_format($cartAmount, 2),
+                    'box_amount' => number_format($boxAmount, 2),
+                    'total_amount' => number_format($finalAmount, 2),
                     'item_count' => $cartItems->count()
                 ]
             ]);
-
+    
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
@@ -47,6 +99,7 @@ class CartController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Add item to cart
@@ -265,7 +318,7 @@ class CartController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             $cartItems = Cart::with(['product:id,name,price,product_image'])
                 ->where('user_id', $user->id)
                 ->where('is_active', true)
@@ -294,4 +347,42 @@ class CartController extends Controller
             ], 500);
         }
     }
+
+
+
+
+    public function selectItemBox(Request $request)
+    {
+        $request->validate([
+            'cart_id' => 'required|exists:carts,id',
+            'box_id' => 'nullable|exists:boxes,id'
+        ]);
+
+        $user = $request->user();
+
+        $cartItem = Cart::where('id', $request->cart_id)
+            ->where('user_id', $user->id)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $cartItem->box_id = $request->box_id;
+        $cartItem->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Box updated for cart item'
+        ]);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 }

@@ -9,6 +9,7 @@
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesbrand" name="author" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ asset('assets/assets/images/logo.webp') }}">
 
@@ -32,12 +33,18 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
 
     <style>
+        :root {
+            --sidebar-width: 240px;
+            --sidebar-collapsed-width: 70px;
+            --topbar-height: 70px;
+        }
+
         .nav-link[aria-expanded="true"] .ri-arrow-down-s-line {
             transform: rotate(180deg);
         }
 
         .nav-link .ri-arrow-down-s-line {
-            transition: transform 0.2s;
+            transition: transform 0.2s ease-in-out;
         }
 
         .table-responsive {
@@ -51,11 +58,12 @@
 
         /* Sidebar optimizations */
         .app-menu {
-            width: 240px !important;
-            max-width: 240px !important;
+            width: var(--sidebar-width) !important;
+            max-width: var(--sidebar-width) !important;
             height: 100vh !important;
             position: fixed;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
 
         .app-menu .navbar-nav {
@@ -65,11 +73,16 @@
         .app-menu .nav-link {
             font-size: 0.9rem !important;
             padding: 0.5rem 1rem !important;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
         }
 
         .app-menu .nav-link i {
             font-size: 0.9rem !important;
             margin-right: 0.5rem !important;
+            min-width: 20px;
+            text-align: center;
         }
 
         .app-menu .menu-dropdown .nav-link {
@@ -88,12 +101,38 @@
         }
 
         .main-content {
-            margin-left: 240px !important;
+            margin-left: var(--sidebar-width) !important;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Collapsed sidebar */
+        body.vertical-collpsed .app-menu {
+            width: var(--sidebar-collapsed-width) !important;
+            max-width: var(--sidebar-collapsed-width) !important;
+        }
+
+        body.vertical-collpsed .main-content {
+            margin-left: var(--sidebar-collapsed-width) !important;
+        }
+
+        body.vertical-collpsed .logo-lg,
+        body.vertical-collpsed .menu-title,
+        body.vertical-collpsed .nav-link span:not(.badge) {
+            display: none !important;
+        }
+
+        body.vertical-collpsed .navbar-brand-box {
+            padding: 0;
+        }
+
+        body.vertical-collpsed .navbar-brand-box .logo-sm {
+            display: block !important;
+            margin: 0 auto;
         }
 
         /* Scrollbar styling for sidebar - HIDDEN but scrollable */
         #scrollbar {
-            height: calc(100vh - 70px);
+            height: calc(100vh - var(--topbar-height));
             overflow-y: auto;
             padding-bottom: 20px;
             scrollbar-width: none;
@@ -108,10 +147,73 @@
             width: 0 !important;
         }
 
+        /* Improved notifications */
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            z-index: 9999;
+            display: none;
+            max-width: 350px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideInRight 0.3s ease;
+        }
+
+        .notification-toast.hide {
+            animation: slideOutRight 0.3s ease;
+        }
+
+        .notification-toast.success {
+            background: #198754;
+            color: #fff;
+        }
+
+        .notification-toast.warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .notification-toast a {
+            color: inherit;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Mobile optimizations */
         @media (max-width: 991.98px) {
             .app-menu {
                 width: 100% !important;
                 height: auto !important;
+                transform: translateX(-100%);
+                z-index: 1001;
+            }
+
+            .app-menu.mobile-open {
+                transform: translateX(0);
             }
 
             .main-content {
@@ -122,6 +224,36 @@
                 height: auto;
                 max-height: 70vh;
             }
+
+            .vertical-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+            }
+
+            .vertical-overlay.show {
+                display: block;
+            }
+        }
+
+        /* Loading indicator for async operations */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
     @stack('styles')
@@ -133,16 +265,30 @@
     <audio id="subscriptionAlertSound" src="{{ asset('assets/assets/alert.mp3') }}" preload="auto"></audio>
 
     <!-- Notification Toasts -->
-    <div id="order-toast"
-        style="display:none; position:fixed; top:20px; right:20px; background:#198754; color:#fff; padding:12px 20px; border-radius:6px; z-index:9999;">
-        🛒 <strong>New order received!</strong>
-        <a href="{{ route('admin.orders.index') }}" style="color:#fff; text-decoration:underline;">View</a>
+    <div class="notification-toast success" id="order-toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex align-items-center">
+            <span class="me-2">🛒</span>
+            <div class="flex-grow-1">
+                <strong>New order received!</strong>
+                <div>
+                    <a href="{{ route('admin.orders.index') }}">View</a>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white ms-2" onclick="hideToast('order-toast')" aria-label="Close"></button>
+        </div>
     </div>
 
-    <div id="subscription-toast"
-        style="display:none; position:fixed; top:60px; right:20px; background:#ffc107; color:#333; padding:12px 20px; border-radius:6px; z-index:9999;">
-        📝 <strong>New subscription received!</strong>
-        <a href="{{ route('admin.subscriptions.index') }}" style="color:#333; text-decoration:underline;">View</a>
+    <div class="notification-toast warning" id="subscription-toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex align-items-center">
+            <span class="me-2">📝</span>
+            <div class="flex-grow-1">
+                <strong>New subscription received!</strong>
+                <div>
+                    <a href="{{ route('admin.subscriptions.index') }}">View</a>
+                </div>
+            </div>
+            <button type="button" class="btn-close ms-2" onclick="hideToast('subscription-toast')" aria-label="Close"></button>
+        </div>
     </div>
 
     <!-- Begin page -->
@@ -156,26 +302,26 @@
                         <div class="navbar-brand-box horizontal-logo">
                             <a href="{{ route('admin.dashboard') }}" class="logo logo-dark">
                                 <span class="logo-sm">
-                                    <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="" height="22">
+                                    <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="Amit Dairy & Sweets" height="22">
                                 </span>
                                 <span class="logo-lg">
-                                    <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="" height="17">
+                                    <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="Amit Dairy & Sweets" height="17">
                                 </span>
                             </a>
 
                             <a href="{{ route('admin.dashboard') }}" class="logo logo-light">
                                 <span class="logo-sm">
-                                    <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="" height="22">
+                                    <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="Amit Dairy & Sweets" height="22">
                                 </span>
                                 <span class="logo-lg">
-                                    <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="" height="17">
+                                    <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="Amit Dairy & Sweets" height="17">
                                 </span>
                             </a>
                         </div>
 
                         <button type="button"
                             class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger"
-                            id="topnav-hamburger-icon">
+                            id="topnav-hamburger-icon" aria-label="Toggle menu">
                             <span class="hamburger-icon">
                                 <span></span>
                                 <span></span>
@@ -187,11 +333,11 @@
                     <div class="d-flex align-items-center">
                         <div class="dropdown ms-sm-3 header-item topbar-user">
                             <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown"
-                                aria-haspopup="true" aria-expanded="false">
+                                aria-haspopup="true" aria-expanded="false" aria-label="User menu">
                                 <span class="d-flex align-items-center">
                                     <img class="rounded-circle header-profile-user"
                                         src="{{ asset('assets/assets/images/users/avatar-1.jpg') }}"
-                                        alt="Header Avatar">
+                                        alt="User Avatar">
                                     <span class="text-start ms-xl-2">
                                         <span
                                             class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{ Auth::guard('admin')->user()->name }}</span>
@@ -199,7 +345,7 @@
                                     </span>
                                 </span>
                             </button>
-                            <div class="dropdown-menu dropdown-menu-end">
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="page-header-user-dropdown">
                                 <h6 class="dropdown-header">Welcome {{ Auth::guard('admin')->user()->name }}!</h6>
                                 <a class="dropdown-item" href="{{ route('admin.dashboard') }}">
                                     <i class="mdi mdi-speedometer text-muted fs-16 align-middle me-1"></i>
@@ -231,22 +377,22 @@
             <div class="navbar-brand-box">
                 <a href="{{ route('admin.dashboard') }}" class="logo logo-dark">
                     <span class="logo-sm">
-                        <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="" height="100px" width="100px">
+                        <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="Amit Dairy & Sweets" height="100" width="100">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="" height="100px" width="100px">
+                        <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="Amit Dairy & Sweets" height="100" width="100">
                     </span>
                 </a>
                 <a href="{{ route('admin.dashboard') }}" class="logo logo-light">
                     <span class="logo-sm">
-                        <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="" height="100px" width="100px">
+                        <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="Amit Dairy & Sweets" height="100" width="100">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="" height="100px" width="100px">
+                        <img src="{{ asset('assets/assets/images/logo.webp') }}" alt="Amit Dairy & Sweets" height="100" width="100">
                     </span>
                 </a>
                 <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"
-                    id="vertical-hover">
+                    id="vertical-hover" aria-label="Toggle sidebar">
                     <i class="ri-record-circle-line"></i>
                 </button>
             </div>
@@ -267,6 +413,7 @@
                             <a class="nav-link menu-link" href="#manageMembers" data-bs-toggle="collapse" role="button"
                                 aria-expanded="false" aria-controls="manageMembers">
                                 <i class="ri-pages-line"></i> <span data-key="t-pages">Manage Users</span>
+                                <i class="ri-arrow-down-s-line ms-auto"></i>
                             </a>
                             <div class="collapse menu-dropdown" id="manageMembers">
                                 <ul class="nav nav-sm flex-column">
@@ -278,8 +425,6 @@
                                         <a href="{{ route('admin.contacts.index') }}" class="nav-link"
                                             data-key="t-team">Contact Us Enquiries</a>
                                     </li>
-
-
                                 </ul>
                             </div>
                         </li>
@@ -288,6 +433,7 @@
                             <a class="nav-link menu-link" href="#pageContent" data-bs-toggle="collapse" role="button"
                                 aria-expanded="false" aria-controls="pageContent">
                                 <i class="ri-rocket-line"></i> <span data-key="t-landing">Page Content</span>
+                                <i class="ri-arrow-down-s-line ms-auto"></i>
                             </a>
                             <div class="collapse menu-dropdown" id="pageContent">
                                 <ul class="nav nav-sm flex-column">
@@ -319,11 +465,10 @@
                             <a class="nav-link menu-link" href="#orders" data-bs-toggle="collapse" role="button"
                                 aria-expanded="false" aria-controls="orders">
                                 <i class="ri-rocket-line"></i> <span data-key="t-landing">Orders</span>
+                                <i class="ri-arrow-down-s-line ms-auto"></i>
                             </a>
                             <div class="collapse menu-dropdown" id="orders">
                                 <ul class="nav nav-sm flex-column">
-                                    <li class="nav-item">
-                                    </li>
                                     <li class="nav-item">
                                         <a href="{{ route('admin.orders.index') }}" class="nav-link"
                                             data-key="t-nft-landing">Orders List</a>
@@ -348,6 +493,7 @@
                             <a class="nav-link menu-link" href="#product" data-bs-toggle="collapse" role="button"
                                 aria-expanded="false" aria-controls="product">
                                 <i class="ri-stack-line"></i> <span data-key="t-advance-ui">Product</span>
+                                <i class="ri-arrow-down-s-line ms-auto"></i>
                             </a>
                             <div class="collapse menu-dropdown" id="product">
                                 <ul class="nav nav-sm flex-column">
@@ -365,7 +511,7 @@
                                     </li>
                                     <li class="nav-item">
                                         <a href="{{ route('admin.payments.index') }}" class="nav-link">
-                                            </i>Advance Payments
+                                            Advance Payments
                                         </a>
                                     </li>
 
@@ -386,6 +532,7 @@
                                 role="button" aria-expanded="false" aria-controls="manageSubscriptionMenu">
                                 <i class="ri-pages-line"></i>
                                 <span data-key="t-pages">Manage Subscription</span>
+                                <i class="ri-arrow-down-s-line ms-auto"></i>
                             </a>
                             <div class="collapse menu-dropdown" id="manageSubscriptionMenu">
                                 <ul class="nav nav-sm flex-column">
@@ -411,6 +558,18 @@
                                     Settings</span>
                             </a>
                         </li>
+<li class="nav-item">
+    <a class="nav-link {{ request()->routeIs('admin.offer.*') ? 'active' : '' }}" 
+       href="{{ route('admin.offer.create') }}">
+        <i class="ri-price-tag-3-line"></i>
+        <span data-key="t-offer">Offer Settings</span>
+    </a>
+</li>
+
+
+
+
+
 
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.delivery-locations.index') }}">
@@ -427,7 +586,7 @@
                         <li class="nav-item">
                             <form method="POST" action="{{ route('admin.logout') }}">
                                 @csrf
-                                <button type="submit" class="nav-link btn btn-link p-0"
+                                <button type="submit" class="nav-link btn btn-link p-0 text-start w-100"
                                     style="border: none; background: none;">
                                     <i class="ri-logout-box-r-line"></i>
                                     <span data-key="t-advance-ui">Logout</span>
@@ -501,36 +660,54 @@
         $(document).ready(function () {
             // Mobile sidebar toggle
             $('#topnav-hamburger-icon').on('click', function () {
-                $('body').toggleClass('sidebar-enable');
-                if ($(window).width() >= 992) {
-                    $('body').toggleClass('vertical-collpsed');
+                if ($(window).width() < 992) {
+                    $('.app-menu').toggleClass('mobile-open');
+                    $('.vertical-overlay').toggleClass('show');
                 } else {
-                    $('body').removeClass('vertical-collpsed');
+                    $('body').toggleClass('vertical-collpsed');
                 }
             });
 
             // Close sidebar on mobile when clicking outside
-            $(document).on('click', function (e) {
+            $('.vertical-overlay').on('click', function () {
+                $('.app-menu').removeClass('mobile-open');
+                $(this).removeClass('show');
+            });
+
+            // Close sidebar on mobile when clicking a link
+            $(document).on('click', '.app-menu .nav-link', function() {
                 if ($(window).width() < 992) {
-                    if (!$(e.target).closest('.app-menu, #topnav-hamburger-icon').length) {
-                        $('body').removeClass('sidebar-enable');
-                    }
+                    $('.app-menu').removeClass('mobile-open');
+                    $('.vertical-overlay').removeClass('show');
                 }
             });
 
             // Submenu toggle for mobile
             $('.menu-link[data-bs-toggle="collapse"]').on('click', function (e) {
                 if ($(window).width() < 992) {
-                    e.preventDefault();
                     const target = $($(this).attr('href'));
-                    target.collapse('toggle');
+                    const isExpanded = $(this).attr('aria-expanded') === 'true';
+                    
+                    // Close all other open dropdowns
+                    $('.menu-dropdown').not(target).collapse('hide');
+                    $('.menu-link[data-bs-toggle="collapse"]').not(this).attr('aria-expanded', 'false');
+                    
+                    if (!isExpanded) {
+                        e.preventDefault();
+                        target.collapse('show');
+                        $(this).attr('aria-expanded', 'true');
+                    }
                 }
             });
+
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
         });
 
         // Notification System
         let lastOrderId = 0;
         let lastSubscriptionId = 0;
+        let isChecking = false;
 
         function playSound(type = 'order') {
             const sound = document.getElementById(`${type}AlertSound`);
@@ -541,44 +718,61 @@
             }
         }
 
-        function showPopup(type = 'order') {
-            const popup = document.getElementById(`${type}-toast`);
-            popup.style.display = 'block';
+        function showToast(type = 'order') {
+            const toast = document.getElementById(`${type}-toast`);
+            toast.style.display = 'block';
+            toast.classList.remove('hide');
+            
             setTimeout(() => {
-                popup.style.display = 'none';
-            }, 4000);
+                hideToast(`${type}-toast`);
+            }, 5000);
         }
 
-        function checkNewData(endpoint, type) {
-            fetch(endpoint + '?check_new=1')
-                .then(res => res.json())
-                .then(data => {
-                    if (!data || typeof data.latest_id === 'undefined' || isNaN(parseInt(data.latest_id))) return;
-                    const newId = parseInt(data.latest_id);
-                    const lastId = type === 'order' ? lastOrderId : lastSubscriptionId;
+        function hideToast(toastId) {
+            const toast = document.getElementById(toastId);
+            toast.classList.add('hide');
+            setTimeout(() => {
+                toast.style.display = 'none';
+                toast.classList.remove('hide');
+            }, 300);
+        }
 
-                    if (newId > lastId) {
-                        console.log(`${type} notification triggered for ID:`, newId);
-                        playSound(type);
-                        showPopup(type);
+        async function checkNewData(endpoint, type) {
+            if (isChecking) return;
+            
+            isChecking = true;
+            try {
+                const response = await fetch(endpoint + '?check_new=1');
+                const data = await response.json();
+                
+                if (!data || typeof data.latest_id === 'undefined' || isNaN(parseInt(data.latest_id))) return;
+                
+                const newId = parseInt(data.latest_id);
+                const lastId = type === 'order' ? lastOrderId : lastSubscriptionId;
 
-                        if ('speechSynthesis' in window) {
-                            const msg = new SpeechSynthesisUtterance(
-                                `New ${type} received on Amit Dairy and Sweets.`);
-                            msg.lang = 'en-IN';
-                            window.speechSynthesis.speak(msg);
-                        }
+                if (newId > lastId) {
+                    console.log(`${type} notification triggered for ID:`, newId);
+                    playSound(type);
+                    showToast(type);
 
-                        if (type === 'order') {
-                            lastOrderId = newId;
-                        } else {
-                            lastSubscriptionId = newId;
-                        }
+                    if ('speechSynthesis' in window) {
+                        const msg = new SpeechSynthesisUtterance(
+                            `New ${type} received on Amit Dairy and Sweets.`);
+                        msg.lang = 'en-IN';
+                        window.speechSynthesis.speak(msg);
                     }
-                })
-                .catch(err => {
-                    /* silent fail */
-                });
+
+                    if (type === 'order') {
+                        lastOrderId = newId;
+                    } else {
+                        lastSubscriptionId = newId;
+                    }
+                }
+            } catch (err) {
+                console.warn('Failed to check for new data:', err);
+            } finally {
+                isChecking = false;
+            }
         }
 
         // Check every 2 seconds for orders, 3 seconds for subscriptions

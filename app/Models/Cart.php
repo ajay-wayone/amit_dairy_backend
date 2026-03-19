@@ -66,4 +66,14 @@ class Cart extends Model
         $this->total_price = $this->price * $this->quantity;
         return $this->total_price;
     }
-} 
+
+
+    public function box()
+    {
+        return $this->belongsTo(Box::class, 'box_id');
+    }
+
+
+
+
+}

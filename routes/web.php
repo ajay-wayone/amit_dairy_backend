@@ -22,7 +22,11 @@ use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\WebsiteBannerController;
 use App\Http\Controllers\Admin\WebsiteSettingsController;
 use App\Http\Controllers\Admin\BlockedSlotController;
+use App\Http\Controllers\Admin\OfferController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\PaymentSlabController;
+
+
 
 // Admin Routes 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -34,9 +38,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Forgot Password Routes
         Route::get('forgot-password', [ForgotPasswordController::class, 'showForgotForm'])->name('forgot-password');
         Route::post('send-otp', [ForgotPasswordController::class, 'sendOTP'])->name('send-otp');
-        Route::get('verify-otp', [ForgotPasswordController::class, 'showVerifyOTP'])->name('verify-otp');
+        // Route::get('verify-otp', [ForgotPasswordController::class, 'showVerifyOTP'])->name('verify-otp');
         Route::post('verify-otp', [ForgotPasswordController::class, 'verifyOTP'])->name('verify-otp');
-        Route::get('reset-password', [ForgotPasswordController::class, 'showResetForm'])->name('reset-password');
+        // Route::get('reset-password', [ForgotPasswordController::class, 'showResetForm'])->name('reset-password');
         Route::post('reset-password', [ForgotPasswordController::class, 'resetPassword'])->name('reset-password');
     });
 
@@ -74,6 +78,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('customers', CustomerController::class);
         Route::get('customers/search', [CustomerController::class, 'search'])->name('customers.search');
         Route::post('customers/{customer}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('customers.toggle-status');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -146,3 +169,41 @@ Route::delete('blocked-slots/{blockedSlot}', [BlockedSlotController::class, 'des
 Route::get('/', function () {
     return redirect()->route('admin.login');
 });
+
+
+
+// Route::prefix('admin')->name('admin.')->group(function () {
+
+//     Route::get('/offers/create', [OfferController::class, 'create'])->name('offer.create');
+
+//     Route::post('/offers/store', [OfferController::class, 'store'])->name('offer.store');
+
+//     Route::put('/offers/update/{id}', [OfferController::class, 'update'])->name('offer.update');
+
+//     Route::delete('/offers/delete/{id}', [OfferController::class, 'destroy'])->name('offer.destroy');
+
+// });
+
+// OFFERS + PAYMENT SLABS (INSIDE ADMIN MIDDLEWARE)
+Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
+
+    // Offers
+    Route::get('/offers/create', [OfferController::class, 'create'])->name('offer.create');
+    Route::post('/offers/store', [OfferController::class, 'store'])->name('offer.store');
+    Route::put('/offers/update/{id}', [OfferController::class, 'update'])->name('offer.update');
+    Route::delete('/offers/delete/{id}', [OfferController::class, 'destroy'])->name('offer.destroy');
+
+    // Payment Slabs
+    // PAYMENT SLABS ROUTES
+    Route::post('slabs/store', [PaymentSlabController::class, 'store'])->name('slabs.store');
+    Route::put('slabs/update/{slab}', [PaymentSlabController::class, 'update'])->name('slabs.update');
+    Route::delete('slabs/delete/{slab}', [PaymentSlabController::class, 'destroy'])->name('slabs.delete');
+
+
+
+});
+
+
+
+
+

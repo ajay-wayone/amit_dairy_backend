@@ -101,7 +101,7 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request->all());
+        //dd($request->all());
         $request->validate([
 
             'name' => 'required|string|max:255',
@@ -111,14 +111,14 @@ class ProductController extends Controller
             'type' => 'nullable|array',
             'type.*' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'discount_price' => 'required|numeric|min:0|lt:price',
+            'discount_price' => 'nullable|numeric|min:0|lt:price',
             'min_order' => 'required|numeric|min:1',
             'max_order' => 'required|numeric|min:1',
             'weight' => 'required|numeric|min:0',
             'weight_type' => 'required|string',
-            'best_seller' => 'required|boolean',
-            'specialities' => 'required|boolean',
-            'status' => 'required|boolean',
+            'best_seller' => 'nullable|boolean',
+            'specialities' => 'nullable|boolean',
+            'status' => 'nullable|boolean',
             'featured_type' => 'required|string',
             'product_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
@@ -155,9 +155,16 @@ class ProductController extends Controller
             return redirect()->route('admin.products.index')
                 ->with('success', 'Product created successfully!');
         } catch (\Exception $e) {
+
+            \Log::error("PRODUCT CREATE ERROR => " . $e->getMessage());
+            \Log::error("FILE => " . $e->getFile());
+            \Log::error("LINE => " . $e->getLine());
+            \Log::error("REQUEST DATA => " . json_encode($request->all()));
+
             return back()->withInput()
-                ->with('error', 'Failed to create product: ' . $e->getMessage());
+                ->with('error', 'Failed to create product, please check logs.');
         }
+
     }
     public function toggleStatus(Product $product)
     {

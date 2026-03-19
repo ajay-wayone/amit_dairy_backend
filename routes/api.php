@@ -16,6 +16,11 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AdvancePaymentController;
+use App\Http\Controllers\Api\OfferController;
+
+
+
+use Razorpay\Api\Api;
 
 use App\Http\Controllers\Api\PolicyController;
 use App\Http\Controllers\Api\OrderController;
@@ -24,6 +29,21 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\ReviewController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\Validator;
+
+
+
+
+
+
+
+Route::get('test', function () {
+    return response()->json([
+        'status' => true,
+        'message' => 'API routes working fine'
+    ]);
+});
+
 
 
 Route::prefix('v1')->group(function () {
@@ -37,6 +57,16 @@ Route::prefix('v1')->group(function () {
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
         Route::post('create-password', [AuthController::class, 'createPassword']);
     });
+
+    // Route::middleware('auth:sanctum')->group(function () {
+    //     Route::get('get-current-user', [AuthController::class, 'getCurrentUser']);
+    // });
+
+
+
+
+
+
 
     // Public product routes
     Route::prefix('products')->group(function () {
@@ -148,18 +178,18 @@ Route::prefix('v1')->group(function () {
     });
 
     // Public policy routes
-    Route::prefix('policies')->group(function () {
-        Route::get('/', [PolicyController::class, 'index']);
-        Route::get('types', [PolicyController::class, 'types']);
-        Route::get('terms', [PolicyController::class, 'terms']);
-        Route::get('privacy', [PolicyController::class, 'privacy']);
-        Route::get('refund', [PolicyController::class, 'refund']);
-        Route::get('return', [PolicyController::class, 'return']);
-        Route::get('disclaimer', [PolicyController::class, 'disclaimer']);
-        Route::get('shipping', [PolicyController::class, 'shipping']);
-        Route::get('cancellation', [PolicyController::class, 'cancellation']);
-        Route::get('{type}', [PolicyController::class, 'show']);
-    });
+    // Route::prefix('policies')->group(function () {
+    //     Route::get('/', [PolicyController::class, 'index']);
+    //     Route::get('types', [PolicyController::class, 'types']);
+    //     Route::get('terms', [PolicyController::class, 'terms']);
+    //     Route::get('privacy', [PolicyController::class, 'privacy']);
+    //     Route::get('refund', [PolicyController::class, 'refund']);
+    //     Route::get('return', [PolicyController::class, 'return']);
+    //     Route::get('disclaimer', [PolicyController::class, 'disclaimer']);
+    //     Route::get('shipping', [PolicyController::class, 'shipping']);
+    //     Route::get('cancellation', [PolicyController::class, 'cancellation']);
+    //     Route::get('{type}', [PolicyController::class, 'show']);
+    // });
 
     // Protected routes (authentication required)
     Route::middleware('auth:sanctum')->group(function () {
@@ -168,27 +198,65 @@ Route::prefix('v1')->group(function () {
         Route::prefix('auth')->group(function () {
             Route::post('logout', [AuthController::class, 'logout']);
             Route::get('profile', [AuthController::class, 'profile']);
-            Route::put('profile', [AuthController::class, 'updateProfile']);
         });
+
+
+
+
+
+
+
+
+
+
+
         // Cart routes
         Route::prefix('cart')->group(function () {
             Route::get('/', [CartController::class, 'index']);
             Route::post('add', [CartController::class, 'addToCart']);
-            Route::put('{id}/quantity', [CartController::class, 'updateQuantity']);
+            Route::put('quantity/{id}', [CartController::class, 'updateQuantity']);
             Route::delete('{id}', [CartController::class, 'removeFromCart']);
             Route::delete('/', [CartController::class, 'clearCart']);
             Route::get('summary', [CartController::class, 'summary']);
+            Route::post('select-item-box', [CartController::class, 'selectItemBox']);
         });
 
+        // Route::post('select-item-box', [CartController::class, 'selectItemBox']);
+
+
+
+
         // Wishlist routes
-        Route::prefix('wishlist')->group(function () {
-            Route::get('/', [WishlistController::class, 'index']);
-            Route::post('add', [WishlistController::class, 'addToWishlist']);
-            Route::delete('{id}', [WishlistController::class, 'removeFromWishlist']);
-            Route::delete('/', [WishlistController::class, 'clearWishlist']);
-            Route::get('check/{productId}', [WishlistController::class, 'checkWishlist']);
-            Route::get('summary', [WishlistController::class, 'summary']);
-        });
+        // Route::prefix('wishlist')->group(function () {
+        //     Route::get('/', [WishlistController::class, 'index']);
+        //     Route::post('add', [WishlistController::class, 'addToWishlist']);
+        //     Route::delete('{id}', [WishlistController::class, 'removeFromWishlist']);
+        //     Route::delete('/', [WishlistController::class, 'clearWishlist']);
+        //     Route::get('check/{productId}', [WishlistController::class, 'checkWishlist']);
+        //     Route::get('summary', [WishlistController::class, 'summary']);
+        // });
+
+
+
+
+
+
+
+
+        Route::get('offers', [OfferController::class, 'getOffers']);
+
+        Route::post('createOffer', [OfferController::class, 'createOffer']);
+
+        Route::post('offer/update/{id}', [OfferController::class, 'updateOffer']);
+        Route::delete('offer/delete/{id}', [OfferController::class, 'deleteOffer']);
+        Route::get('latest-offer', [OfferController::class, 'latestOffer']);
+
+
+
+
+
+
+
 
         // Order routes
         Route::prefix('orders')->group(function () {
@@ -209,6 +277,12 @@ Route::prefix('v1')->group(function () {
             Route::post('webhook', [PaymentController::class, 'webhook']);
         });
 
+
+        Route::post('verify-payment', [PaymentController::class, 'verifyRazorpayPayment']);
+
+
+
+
         Route::middleware('auth:sanctum')->prefix('payments')->group(function () {
             Route::get('/', [PaymentController::class, 'index']);
 
@@ -216,11 +290,11 @@ Route::prefix('v1')->group(function () {
         });
         // address
 
-        Route::middleware('auth:sanctum')->group(function () {
-            Route::get('/addresses', [AddressController::class, 'index']);   // GET
-            Route::post('/addresses', [AddressController::class, 'store']);  // POST
-            Route::put('/addresses/{id}', [AddressController::class, 'update']); // UPDATE
-        });
+        // Route::middleware('auth:sanctum')->group(function () {
+        //     Route::get('/addresses', [AddressController::class, 'index']);   // GET
+        //     Route::post('/addresses', [AddressController::class, 'store']);  // POST
+        //     Route::put('/addresses/{id}', [AddressController::class, 'update']); // UPDATE
+        // });
 
         // Review routes (protected)
         Route::prefix('reviews')->group(function () {
@@ -237,3 +311,59 @@ Route::prefix('v1')->group(function () {
         });
     });
 });
+
+
+// Route::prefix('wishlist')->group(function () {
+// Route::middleware('auth:sanctum')->prefix('wishlist')->group(function () {
+//     Route::get('index', [WishlistController::class, 'index']);
+//     Route::post('add', [WishlistController::class, 'addToWishlist']);
+//     Route::delete('remove/{id}', [WishlistController::class, 'removeFromWishlist']);
+//     Route::delete('clear', [WishlistController::class, 'clearWishlist']);
+//     Route::get('check/{productId}', [WishlistController::class, 'checkWishlist']);
+//     Route::get('summary', [WishlistController::class, 'summary']);
+// });
+
+
+
+Route::get('get-wishlist', [WishlistController::class, 'getWishlist']);
+
+
+Route::post('add-wishlist', [WishlistController::class, 'addWishlist']);
+
+Route::post('delete-wishlist', [WishlistController::class, 'deleteWishlist']);
+
+
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('addresses', [AddressController::class, 'index']); // GET current user's addresses
+
+    Route::post('addresses/store', [AddressController::class, 'store']);
+
+    Route::put('update/addresses/{id}', [AddressController::class, 'update']);
+
+
+    // Route::post('addresses/store', [AddressController::class, 'store']);  // POST
+
+    // Route::put('update/addresses/{id}', [AddressController::class, 'update']); // UPDATE
+});
+
+
+
+Route::get('terms-condition', [PolicyController::class, 'terms']);       // Terms & Conditions
+Route::get('privacy-policy', [PolicyController::class, 'privacy']);   // Privacy Policy
+Route::get('refund-policy', [PolicyController::class, 'refund']);     // Refund Policy
+
+
+
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('get-current-user', [AuthController::class, 'getCurrentUser']);
+});
+
+Route::middleware('auth:api')->post('update-profile', [AuthController::class, 'updateProfile']);
+
+
+Route::get('/pincodes', [AddressController::class, 'Pincode']);
+
+

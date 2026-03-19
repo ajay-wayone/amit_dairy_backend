@@ -7,6 +7,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Wishlist extends Model
 {
+
+
+
+
+
+    // protected $fillable = ['user_id', 'product_id', 'is_active'];
+
+
+
+
+
+
+
+
     use HasFactory;
 
     protected $fillable = [
@@ -32,9 +46,17 @@ class Wishlist extends Model
     /**
      * Get the product in the wishlist.
      */
+    // public function product()
+    // {
+    //     return $this->belongsTo(Product::class);
+    // }
+
+
+
+
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
     /**
@@ -52,4 +74,4 @@ class Wishlist extends Model
     {
         return $query->where('user_id', $userId);
     }
-} 
+}

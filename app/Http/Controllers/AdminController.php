@@ -23,21 +23,21 @@ class AdminController extends Controller
         ]);
 
         $credentials = $request->only('email', 'password');
-        
+
         if (Auth::guard('admin')->attempt($credentials)) {
             $admin = Auth::guard('admin')->user();
-            
+
             if (!$admin->isActive()) {
                 Auth::guard('admin')->logout();
                 throw ValidationException::withMessages([
                     'email' => 'Your account is deactivated.',
-                ]);
+                ]);   
             }
 
             $admin->update(['last_login_at' => now()]);
-            
+
             $request->session()->regenerate();
-            
+
             return redirect()->intended(route('admin.dashboard'));
         }
 
@@ -49,10 +49,10 @@ class AdminController extends Controller
     public function logout(Request $request)
     {
         Auth::guard('admin')->logout();
-        
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        
+
         return redirect()->route('admin.login');
     }
 

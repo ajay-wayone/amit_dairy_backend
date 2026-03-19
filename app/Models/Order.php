@@ -41,6 +41,9 @@ class Order extends Model
         'house_block',
         'area_road',
         'save_as',
+        'razorpay_order_id',
+        'razorpay_payment_id',
+        'razorpay_signature',
     ];
 
     protected $casts = [

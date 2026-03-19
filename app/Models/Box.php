@@ -26,4 +26,15 @@ class Box extends Model
     {
         return $this->belongsToMany(Category::class, 'category_box');
     }
+
+
+    public function carts()
+    {
+        return $this->hasMany(Cart::class, 'box_id');
+    }
+
+
+
+
+
 }
