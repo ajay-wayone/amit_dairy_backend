@@ -558,6 +558,18 @@
                                     Settings</span>
                             </a>
                         </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('admin.gateways.index') }}">
+                                <i class="ri-key-2-line"></i> <span data-key="t-advance-ui">Gateway Settings</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.smtp.*') ? 'active' : '' }}" href="{{ route('admin.smtp.edit') }}">
+                                <i class="ri-mail-settings-line"></i> <span data-key="t-advance-ui">Configure SMTP</span>
+                            </a>
+                        </li>
 <li class="nav-item">
     <a class="nav-link {{ request()->routeIs('admin.offer.*') ? 'active' : '' }}" 
        href="{{ route('admin.offer.create') }}">

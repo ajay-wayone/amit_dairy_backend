@@ -66,7 +66,7 @@ class subscriptionController extends Controller
 
             return redirect()->route('admin.subscriptions.index')
                 ->with('success', 'Subscription created successfully!');
-        }
+        }                                       
         catch (\Exception $e) {
             return back()->withInput()
                 ->with('error', 'Failed to create subscription: ' . $e->getMessage());

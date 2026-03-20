@@ -155,9 +155,12 @@
             color: #856404;
         }
 
-        .payment-completed {
-            background-color: #d1e7dd;
-            color: #0f5132;
+        .payment-completed,
+        .payment-paid {
+            color: #28a745;
+            font-weight: 600;
+            background-color: transparent;
+            padding: 0;
         }
 
         .payment-failed {
@@ -307,6 +310,54 @@
         });
     }
 });
+
+            // Cancel Order
+            $(document).on('click', '.cancel-order', function() {
+                const orderId = $(this).data('id');
+                const orderCode = $(this).data('code');
+
+                Swal.fire({
+                    title: 'Cancel Order?',
+                    text: `Are you sure you want to cancel order ${orderCode}? This action cannot be undone.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, cancel it!',
+                    cancelButtonText: 'No, keep it'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/admin/orders/${orderId}/update-status`,
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                status: 'cancelled'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Cancelled!',
+                                        text: 'Order has been cancelled successfully.',
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    }).then(() => {
+                                        performSearch(currentPage);
+                                    });
+                                }
+                            },
+                            error: function() {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error!',
+                                    text: 'Failed to cancel order'
+                                });
+                            }
+                        });
+                    }
+                });
+            });
 
             // Pagination
             $(document).on('click', '.pagination a', function(e) {

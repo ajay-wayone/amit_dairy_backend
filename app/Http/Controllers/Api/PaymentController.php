@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\order;
 
 use Razorpay\Api\Api;
+use App\Services\GatewayService;
 
 
 
@@ -28,7 +29,8 @@ class PaymentController extends Controller
             'order_id' => 'nullable|integer'
         ]);
         try {
-            Stripe::setApiKey(env('STRIPE_SECRET'));
+            $stripeConfig = GatewayService::getConfig('stripe');
+            Stripe::setApiKey($stripeConfig['secret']);
 
             $charge = Charge::create([
                 'amount' => $request->amount * 100, // cents
@@ -67,7 +69,7 @@ class PaymentController extends Controller
     {
         $payload = @file_get_contents('php://input');
         $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
-        $secret = env('STRIPE_WEBHOOK_SECRET');
+        $secret = GatewayService::getConfig('stripe')['secret'] ?? env('STRIPE_WEBHOOK_SECRET');
 
         try {
             $event = Webhook::constructEvent(
@@ -178,10 +180,7 @@ class PaymentController extends Controller
         ]);
 
         try {
-            $api = new Api(
-                env('RAZORPAY_KEY_ID'),
-                env('RAZORPAY_KEY_SECRET')
-            );
+            $api = GatewayService::getRazorpayApi();
 
             $attributes = [
                 'razorpay_order_id' => $request->razorpay_order_id,

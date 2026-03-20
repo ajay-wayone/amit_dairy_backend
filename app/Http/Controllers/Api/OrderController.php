@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 use Razorpay\Api\Api;
+use App\Services\GatewayService;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
@@ -209,11 +210,11 @@ class OrderController extends Controller
         ]);
 
         $user = $request->user();
-
-        \Log::info('User authentication check', [
-            'user_id' => $user ? $user->id : null,
-            'user_email' => $user ? $user->email : null,
-        ]);
+        file_put_contents(base_path('request_debug.log'), json_encode([
+            'time' => date('Y-m-d H:i:s'),
+            'user' => $user ? $user->id : 'null',
+            'request' => $request->all()
+        ], JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
 
         if (!$user) {
             \Log::error('Authentication failed: No user found');
@@ -256,25 +257,39 @@ class OrderController extends Controller
 
         try {
 
-            $subtotal = $request->subtotal ?? 0;
-            $delivery_charge = $request->delivery_charge ?? 0;
-            $total_amount = $subtotal + $delivery_charge;
-
-            // 🟢 Prepare cart data
+            // 🟢 Calculate totals and prepare cart data
+            $subtotal = 0;
             $cartDataWithImages = [];
-            foreach ($request->cart_data as $item) {
-                $product = Product::find($item['product_id']);
+            foreach ($request->cart_data as $key => $item) {
+                // Determine product ID (handle associative or sequential array)
+                $productId = $item['product_id'] ?? null;
+                if (!$productId) continue;
+
+                $product = Product::find($productId);
                 if ($product) {
+                    // Handle both 'price' and 'product_price' field names
+                    $itemPrice = $item['price'] ?? $item['product_price'] ?? $product->price ?? 0;
+                    $itemQty = $item['quantity'] ?? 1;
+                    $itemTotal = $itemPrice * $itemQty;
+                    
+                    $subtotal += $itemTotal;
+                    
                     $cartDataWithImages[] = [
                         'product_id' => $product->id,
                         'product_name' => $product->name,
-                        'quantity' => $item['quantity'],
-                        'price' => $item['price'],
-                        'total' => $item['price'] * $item['quantity'],
+                        'quantity' => $itemQty,
+                        'price' => $itemPrice,
+                        'total' => $itemTotal,
                         'product_image' => $product->image ? url($product->image) : null,
+                        'product_sku' => $product->sku ?? null,
                     ];
                 }
             }
+
+            // Use provided subtotal/total if sent, otherwise use calculated ones
+            $subtotal = $request->subtotal ?? $subtotal;
+            $delivery_charge = $request->delivery_charge ?? 0;
+            $total_amount = $subtotal + $delivery_charge;
 
             // 🔴 Razorpay Order Create (Only Online)
             $razorpayOrderId = null;
@@ -288,10 +303,7 @@ class OrderController extends Controller
                 ]);
 
                 try {
-                    $api = new Api(
-                        config('services.razorpay.key'),
-                        config('services.razorpay.secret')
-                    );
+                    $api = GatewayService::getRazorpayApi();
 
                     $razorpayOrder = $api->order->create([
                         'receipt' => 'order_rcpt_' . time(),
@@ -339,10 +351,10 @@ class OrderController extends Controller
                 'customer_id' => $user->id, // Assuming user and customer are the same
                 'order_code' => 'ORD-' . time(),
                 'order_id' => 'ORD-' . time() . '-' . $user->id,
-                'customer_name' => $user->full_name ?? $user->name ?? 'Customer',
-                'customer_email' => $user->email,
-                'customer_phone' => $user->phone,
-                'delivery_address' => $request->delivery_address ?? '',
+                'customer_name' => $request->customer_name ?? $user->full_name ?? $user->name ?? 'Customer',
+                'customer_email' => $request->customer_email ?? $user->email ?? 'N/A',
+                'customer_phone' => $request->customer_phone ?? $user->phone ?? 'N/A',
+                'delivery_address' => $request->delivery_address ?? (($request->house_block ? $request->house_block . ', ' : '') . ($request->area_road ? $request->area_road . ', ' : '') . ($request->address_details ?? '')),
                 'delivery_city' => $request->delivery_city ?? '',
                 'delivery_state' => $request->delivery_state ?? '',
                 'delivery_pincode' => $request->delivery_pincode ?? '',
@@ -364,10 +376,24 @@ class OrderController extends Controller
                 'delivery_time' => $request->delivery_time ?? null,
                 'latitude' => $request->latitude ?? null,
                 'longitude' => $request->longitude ?? null,
+                'delivery_date' => $request->delivery_date ?? now()->addDay(), 
                 'razorpay_order_id' => $razorpayOrderId,
                 'razorpay_payment_id' => $request->razorpay_payment_id ?? '',
                 'razorpay_signature' => $request->razorpay_signature ?? '',
             ]);
+
+            // ðŸŸ¢ Save order items
+            foreach ($cartDataWithImages as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'user_id' => $user->id,
+                    'product_id' => $item['product_id'],
+                    'product_name' => $item['product_name'],
+                    'price' => $item['price'],
+                    'quantity' => $item['quantity'],
+                    'total' => $item['total'],
+                ]);
+            }
 
             DB::commit();
 

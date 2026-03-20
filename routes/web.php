@@ -25,6 +25,8 @@ use App\Http\Controllers\Admin\BlockedSlotController;
 use App\Http\Controllers\Admin\OfferController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\PaymentSlabController;
+use App\Http\Controllers\Admin\GatewayController;
+use App\Http\Controllers\Admin\SmtpController;
 
 
 
@@ -160,6 +162,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // TODO: Implement password change
             return redirect()->back()->with('success', 'Password updated successfully!');
         })->name('change-credentials.update');
+
+        // Gateway Settings
+        Route::resource('gateways', GatewayController::class)->only(['index', 'edit', 'update']);
+        Route::post('gateways/{gateway}/toggle-mode', [GatewayController::class, 'toggleMode'])->name('gateways.toggle-mode');
+        Route::post('gateways/{gateway}/toggle-status', [GatewayController::class, 'toggleStatus'])->name('gateways.toggle-status');
+
+        // SMTP Settings
+        Route::get('smtp', [SmtpController::class, 'edit'])->name('smtp.edit');
+        Route::put('smtp', [SmtpController::class, 'update'])->name('smtp.update');
+        Route::post('smtp/toggle-status', [SmtpController::class, 'toggleStatus'])->name('smtp.toggle-status');
     });
 });
 // block dates routs

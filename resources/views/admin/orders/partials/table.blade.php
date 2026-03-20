@@ -23,13 +23,26 @@
                     <strong>{{ $order->order_code }}</strong>
                 </td>
 
-                <td> {{ $order->customer_name }}</td>
-                <td>{{$order->customer_email}}</td>
-                <td>{{$order->delivery_pincode}}</td>
+                <td> {{ $order->customer_name ?: 'N/A' }}</td>
+                <td>{{ $order->customer_email ?: 'N/A' }}</td>
+                <td>{{ $order->delivery_pincode ?: 'N/A' }}</td>
                 <td>
                     <div>
-                        {{ $order->delivery_address }}
-                        <br><small class="text-muted">{{ $order->delivery_city }}, {{ $order->delivery_state }}</small>
+                        @if($order->delivery_address)
+                            {{ $order->delivery_address }}
+                        @else
+                            {{ $order->house_block ? $order->house_block . ', ' : '' }}
+                            {{ $order->area_road ? $order->area_road . ', ' : '' }}
+                            {{ $order->address_details ?: '' }}
+                        @endif
+                        
+                        @if($order->delivery_city || $order->delivery_state || $order->delivery_pincode)
+                            <br><small class="text-muted">
+                                {{ $order->delivery_city ? $order->delivery_city . ', ' : '' }}
+                                {{ $order->delivery_state ? $order->delivery_state : '' }}
+                                {{ $order->delivery_pincode ? ' - ' . $order->delivery_pincode : '' }}
+                            </small>
+                        @endif
                     </div>
                 </td>
                 <td>
@@ -56,8 +69,15 @@
                     <br><small class="text-muted">{{ ucfirst($order->payment_method) }}</small>
                 </td>
                 <td>
-                    {{ $order->delivered_at ? $order->delivered_at->format('d M Y') : '' }}
+                    @if($order->delivery_date)
+                        {{ \Carbon\Carbon::parse($order->delivery_date)->format('d M Y') }}
+                    @else
+                        <span class="text-muted">Not Set</span>
+                    @endif
 
+                    @if($order->delivered_at)
+                        <br><small class="text-success">Delivered: {{ $order->delivered_at->format('d M Y') }}</small>
+                    @endif
                 </td>
                 <td>
                     <div class="action-buttons">

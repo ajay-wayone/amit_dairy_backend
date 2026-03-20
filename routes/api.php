@@ -174,6 +174,13 @@ Route::prefix('v1')->group(function () {
         Route::get('contact', [WebsiteSettingsController::class, 'contact']);
         Route::get('delivery', [WebsiteSettingsController::class, 'delivery']);
         Route::get('payment-methods', [WebsiteSettingsController::class, 'paymentMethods']);
+        Route::get('razorpay-key', function () {
+            $config = \App\Services\GatewayService::getConfig('razorpay');
+            return response()->json([
+                'status' => true,
+                'key' => $config['key'] ?? config('services.razorpay.key'),
+            ]);
+        });
         Route::get('{key}', [WebsiteSettingsController::class, 'show']);
     });
 
