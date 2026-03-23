@@ -179,6 +179,9 @@ Route::get('blocked-slots', [BlockedSlotController::class, 'index'])->name('bloc
 Route::post('blocked-slots', [BlockedSlotController::class, 'store'])->name('block.store');
 Route::delete('blocked-slots/{blockedSlot}', [BlockedSlotController::class, 'destroy'])->name('block.destroy');
 Route::get('/', function () {
+    if (\Illuminate\Support\Facades\Auth::guard('admin')->check()) {
+        return redirect()->route('admin.dashboard');
+    }
     return redirect()->route('admin.login');
 });
 
