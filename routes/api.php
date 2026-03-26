@@ -33,10 +33,6 @@ use App\Http\Controllers\API\Validator;
 
 
 
-
-
-
-
 Route::get('test', function () {
     return response()->json([
         'status' => true,
@@ -61,10 +57,6 @@ Route::prefix('v1')->group(function () {
     // Route::middleware('auth:sanctum')->group(function () {
     //     Route::get('get-current-user', [AuthController::class, 'getCurrentUser']);
     // });
-
-
-
-
 
 
 
@@ -128,8 +120,8 @@ Route::prefix('v1')->group(function () {
         Route::get('{id}', [BannerController::class, 'show']);
     });
     Route::prefix('boxes')->group(function () {
-        Route::get('/', [BoxController::class, 'index']);   // All boxes
-        Route::get('{id}', [BoxController::class, 'show']); // Single box
+        Route::get('/', [BoxController::class, 'index']);
+        Route::get('{id}', [BoxController::class, 'show']);
     });
     // Public FAQ routes
     Route::prefix('faqs')->group(function () {
@@ -208,15 +200,6 @@ Route::prefix('v1')->group(function () {
         });
 
 
-
-
-
-
-
-
-
-
-
         // Cart routes
         Route::prefix('cart')->group(function () {
             Route::get('/', [CartController::class, 'index']);
@@ -230,9 +213,6 @@ Route::prefix('v1')->group(function () {
 
         // Route::post('select-item-box', [CartController::class, 'selectItemBox']);
 
-
-
-
         // Wishlist routes
         // Route::prefix('wishlist')->group(function () {
         //     Route::get('/', [WishlistController::class, 'index']);
@@ -244,12 +224,6 @@ Route::prefix('v1')->group(function () {
         // });
 
 
-
-
-
-
-
-
         Route::get('offers', [OfferController::class, 'getOffers']);
 
         Route::post('createOffer', [OfferController::class, 'createOffer']);
@@ -257,12 +231,6 @@ Route::prefix('v1')->group(function () {
         Route::post('offer/update/{id}', [OfferController::class, 'updateOffer']);
         Route::delete('offer/delete/{id}', [OfferController::class, 'deleteOffer']);
         Route::get('latest-offer', [OfferController::class, 'latestOffer']);
-
-
-
-
-
-
 
 
         // Order routes
@@ -277,6 +245,8 @@ Route::prefix('v1')->group(function () {
             Route::post('{id}/cancel', [OrderController::class, 'cancel']);
             Route::get('{id}/track', [OrderController::class, 'track']);
         });
+
+
         // Public payment routes
         Route::prefix(prefix: 'payments')->group(function () {
             Route::post('create', [PaymentController::class, 'pay']);
@@ -288,13 +258,12 @@ Route::prefix('v1')->group(function () {
         Route::post('verify-payment', [PaymentController::class, 'verifyRazorpayPayment']);
 
 
-
-
         Route::middleware('auth:sanctum')->prefix('payments')->group(function () {
             Route::get('/', [PaymentController::class, 'index']);
 
             Route::get('{id}', [PaymentController::class, 'show']);
         });
+
         // address
 
         // Route::middleware('auth:sanctum')->group(function () {
@@ -302,6 +271,7 @@ Route::prefix('v1')->group(function () {
         //     Route::post('/addresses', [AddressController::class, 'store']);  // POST
         //     Route::put('/addresses/{id}', [AddressController::class, 'update']); // UPDATE
         // });
+
 
         // Review routes (protected)
         Route::prefix('reviews')->group(function () {
@@ -348,11 +318,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('addresses/store', [AddressController::class, 'store']);
 
     Route::put('update/addresses/{id}', [AddressController::class, 'update']);
-
-
-    // Route::post('addresses/store', [AddressController::class, 'store']);  // POST
-
-    // Route::put('update/addresses/{id}', [AddressController::class, 'update']); // UPDATE
 });
 
 
@@ -372,5 +337,3 @@ Route::middleware('auth:api')->post('update-profile', [AuthController::class, 'u
 
 
 Route::get('/pincodes', [AddressController::class, 'Pincode']);
-
-

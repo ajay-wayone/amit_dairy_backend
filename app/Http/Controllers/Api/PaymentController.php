@@ -118,59 +118,6 @@ class PaymentController extends Controller
     }
 
 
-
-
-    // public function verifyRazorpayPayment(Request $request)
-    // {
-    //     $request->validate([
-    //         'razorpay_payment_id' => 'required|string',
-    //         'razorpay_order_id' => 'required|string',
-    //         'razorpay_signature' => 'required|string',
-    //     ]);
-
-    //     try {
-    //         $api = new Api(
-    //             env('RAZORPAY_KEY_ID'),
-    //             env('RAZORPAY_KEY_SECRET')
-    //         );
-
-    //         // 🔐 Signature verify
-    //         $attributes = [
-    //             'razorpay_order_id' => $request->razorpay_order_id,
-    //             'razorpay_payment_id' => $request->razorpay_payment_id,
-    //             'razorpay_signature' => $request->razorpay_signature,
-    //         ];
-
-    //         $api->utility->verifyPaymentSignature($attributes);
-
-    //         // ✅ Payment DB me update karo
-    //         $payment = Payment::where('transaction_id', $request->razorpay_payment_id)->first();
-
-    //         if ($payment) {
-    //             $payment->update([
-    //                 'status' => 'paid',
-    //             ]);
-    //         }
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'verified' => true,
-    //             'message' => 'Razorpay payment verified successfully'
-    //         ], 200);
-
-    //     } catch (\Exception $e) {
-
-    //         // ❌ Signature fail ya kuch aur error
-    //         return response()->json([
-    //             'success' => false,
-    //             'verified' => false,
-    //             'message' => 'Payment verification failed',
-    //             'error' => $e->getMessage()
-    //         ], 400);
-    //     }
-    // }
-
-
     public function verifyRazorpayPayment(Request $request)
     {
         $request->validate([
@@ -239,10 +186,6 @@ class PaymentController extends Controller
             ], 400);
         }
     }
-
-
-
-
 
 
 }
