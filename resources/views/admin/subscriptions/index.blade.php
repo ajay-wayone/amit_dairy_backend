@@ -47,7 +47,7 @@
                                 @forelse($subscriptions as $key => $subscription)
                                     <tr>
                                         <td>{{ $key + 1 }}</td>
-                                        <td>{{ $subscription->plan_name ?? 'N/A' }}</td>
+                                        <td>{{ $subscription->title ?? 'N/A' }}</td>
                                         <td>
                                             @if ($subscription->image)
                                                 <img src="{{ asset('storage/' . $subscription->image) }}"
@@ -60,16 +60,13 @@
                                         <td>₹{{ number_format($subscription->price ?? 0, 2) }}</td>
                                         <td>{{ !empty($subscription->valid_days) ? $subscription->valid_days : 'NA' }}</td>
 
-                                        <td>{{ $subscription->description ? \Illuminate\Support\Str::words($subscription->description, 7, '...') : 'N/A' }}
+                                        <td>{{ $subscription->description ? \Illuminate\Support\Str::words($subscription->description, 7, '...') : 'N/A' }}</td>
 
                                         <td>
                                             @php
                                                 $status = 'Active';
                                                 $statusClass = 'success';
-                                                if ($subscription->end_date && $subscription->end_date < now()) {
-                                                    $status = 'Expired';
-                                                    $statusClass = 'danger';
-                                                } elseif (!$subscription->is_active) {
+                                                if (!$subscription->status) {
                                                     $status = 'Inactive';
                                                     $statusClass = 'warning';
                                                 }
@@ -77,7 +74,6 @@
                                             <span class="badge bg-{{ $statusClass }}">
                                                 {{ $status }}
                                             </span>
-                                        </td>
                                         </td>
 
                                         <td>{{ $subscription->created_at ? $subscription->created_at->format('M d, Y') : 'N/A' }}

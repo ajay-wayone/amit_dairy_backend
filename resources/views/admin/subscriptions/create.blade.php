@@ -17,9 +17,9 @@
                             <div class="col-md-6">
                                 <label for="plan_name" class="form-label small">Plan Name *</label>
                                 <input type="text" name="title" id="plan_name" placeholder="Enter The Plan_Name..."
-                                    class="form-control form-control-sm @error('plan_name') is-invalid @enderror"
-                                    value="{{ old('plan_name') }}" required>
-                                @error('plan_name')
+                                    class="form-control form-control-sm @error('title') is-invalid @enderror"
+                                    value="{{ old('title') }}" required>
+                                @error('title')
                                     <div class="invalid-feedback small">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -38,9 +38,9 @@
                             <div class="col-md-6">
                                 <label for="amount" class="form-label small">Amount (₹) *</label>
                                 <input type="number" name="price" id="amount" placeholder="Enter the Amount..."
-                                    class="form-control form-control-sm @error('amount') is-invalid @enderror"
-                                    value="{{ old('amount') }}" step="0.01" required>
-                                @error('amount')
+                                    class="form-control form-control-sm @error('price') is-invalid @enderror"
+                                    value="{{ old('price') }}" step="0.01" required>
+                                @error('price')
                                     <div class="invalid-feedback small">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -48,11 +48,11 @@
                             <div class="col-md-6">
                                 <label for="is_active" class="form-label small">Status *</label>
                                 <select name="status" id="is_active"
-                                    class="form-select form-select-sm @error('is_active') is-invalid @enderror" required>
-                                    <option value="1" {{ old('is_active') == '1' ? 'selected' : '' }}>Active</option>
-                                    <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Inactive</option>
+                                    class="form-select form-select-sm @error('status') is-invalid @enderror" required>
+                                    <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Active</option>
+                                    <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
                                 </select>
-                                @error('is_active')
+                                @error('status')
                                     <div class="invalid-feedback small">{{ $message }}</div>
                                 @enderror
                             </div>
