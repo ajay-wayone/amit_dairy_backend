@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 use App\Models\Pincodes;
+use App\Models\DeliveryLocation;
 
 
 
@@ -122,6 +123,18 @@ class AddressController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // 📡 Check Delivery Availability
+        $isServiceable = DeliveryLocation::where('pincode', $request->pincode)
+            ->where('is_active', 1)
+            ->exists();
+
+        if (!$isServiceable) {
+            return response()->json([
+                'success' => false,
+                'message' => "Sorry, we do not provide delivery services at the pincode {$request->pincode}. Please choose a different location."
+            ], 400);
+        }
+
         // Create address
         $address = Address::create($request->only([
             'full_name',
@@ -216,6 +229,20 @@ class AddressController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // 📡 Check Delivery Availability
+        if ($request->has('pincode')) {
+            $isServiceable = DeliveryLocation::where('pincode', $request->pincode)
+                ->where('is_active', 1)
+                ->exists();
+
+            if (!$isServiceable) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Delivery is not available for pincode {$request->pincode}."
+                ], 400);
+            }
         }
 
         // Use only fillable fields to update

@@ -15,7 +15,9 @@ class Cart extends Model
         'quantity',
         'price',
         'total_price',
-        'is_active'
+        'is_active',
+        'box_id',
+        'box_qty'
     ];
 
     protected $casts = [

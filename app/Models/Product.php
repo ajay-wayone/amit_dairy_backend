@@ -29,6 +29,7 @@ class Product extends Model
         'featured_type',
         'status',
         'tags',
+        'sub_images',
     ];
 
     protected $casts = [
@@ -41,6 +42,7 @@ class Product extends Model
         'best_seller'      => 'boolean',
         'specialities'     => 'boolean',
         'status'           => 'boolean',
+        'sub_images'       => 'array',
     ];
 
     public function category()

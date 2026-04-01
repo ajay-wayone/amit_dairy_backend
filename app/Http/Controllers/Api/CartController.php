@@ -355,7 +355,8 @@ class CartController extends Controller
     {
         $request->validate([
             'cart_id' => 'required|exists:carts,id',
-            'box_id' => 'nullable|exists:boxes,id'
+            'box_id' => 'nullable|exists:boxes,id',
+            'box_qty' => 'nullable|integer|min:1'
         ]);
 
         $user = $request->user();
@@ -366,6 +367,7 @@ class CartController extends Controller
             ->firstOrFail();
 
         $cartItem->box_id = $request->box_id;
+        $cartItem->box_qty = $request->box_qty;
         $cartItem->save();
 
         return response()->json([
@@ -374,15 +376,27 @@ class CartController extends Controller
         ]);
     }
 
+    public function removeItemBox(Request $request)
+    {
+        $request->validate([
+            'cart_id' => 'required|exists:carts,id',
+        ]);
 
+        $user = $request->user();
 
+        $cartItem = Cart::where('id', $request->cart_id)
+            ->where('user_id', $user->id)
+            ->where('is_active', true)
+            ->firstOrFail();
 
+        $cartItem->box_id = null;
+        $cartItem->box_qty = null;
+        $cartItem->save();
 
-
-
-
-
-
-
+        return response()->json([
+            'status' => true,
+            'message' => 'Box removed from cart item'
+        ]);
+    }
 
 }

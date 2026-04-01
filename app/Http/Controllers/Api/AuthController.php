@@ -641,6 +641,13 @@ class AuthController extends Controller
                 ->update($data);
 
             $updatedUser = DB::table('users')->where('id', $user->id)->first();
+            
+            // Send and Save notification for Profile Update
+            $user->notify(new UserNotification(
+                'Profile Updated',
+                'Your profile details have been successfully updated.',
+                ['user_id' => $user->id, 'type' => 'profile_updated']
+            ));
 
             return response()->json([
                 'code' => 200,

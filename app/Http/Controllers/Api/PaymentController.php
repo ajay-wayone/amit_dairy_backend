@@ -137,38 +137,44 @@ class PaymentController extends Controller
 
             $api->utility->verifyPaymentSignature($attributes);
 
-            // ✅ Step 1: Orders table se fetch
-            $order = Order::where('razorpay_payment_id', $request->razorpay_payment_id)->first();
+            // ✅ Step 1: Find order by razorpay_order_id (saved at order creation time)
+            $order = Order::where('razorpay_order_id', $request->razorpay_order_id)->first();
 
             if (!$order) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Order not found for this payment ID',
+                    'message' => 'Order not found for this Razorpay order ID',
                 ], 404);
             }
 
-            // ✅ Step 2: Payment table update/create
+            // ✅ Step 2: Save razorpay_payment_id & signature on the order (first time we receive it)
+            $order->update([
+                'razorpay_payment_id' => $request->razorpay_payment_id,
+                'razorpay_signature'  => $request->razorpay_signature,
+            ]);
+
+            // ✅ Step 3: Payment table update/create
             $payment = Payment::where('transaction_id', $request->razorpay_payment_id)->first();
             if (!$payment) {
                 $payment = Payment::create([
-                    'order_id' => $order->id,
-                    'user_id' => $order->user_id,
+                    'order_id'       => $order->id,
+                    'user_id'        => $order->user_id,
                     'transaction_id' => $request->razorpay_payment_id,
                     'payment_method' => 'razorpay',
-                    'amount' => $order->total_amount ?? 0,
-                    'status' => 'paid',
-                    'response' => json_encode($request->all()),
+                    'amount'         => $order->total_amount ?? 0,
+                    'status'         => 'success',
+                    'response'       => json_encode($request->all()),
                 ]);
             } else {
                 $payment->update([
-                    'status' => 'paid',
+                    'status' => 'success',
                 ]);
             }
 
-            // ✅ Step 3: Orders table status update
+            // ✅ Step 4: Update order payment & status
             $order->update([
                 'payment_status' => 'paid',
-                'order_status' => 'confirmed',
+                'order_status'   => 'confirmed',
             ]);
 
             return response()->json([

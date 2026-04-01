@@ -199,8 +199,8 @@
             <thead>
                 <tr>
                     <th>Sr No.</th>
-                    <th>Min KM</th>
-                    <th>Max KM</th>
+                    <th>Min Kg</th>
+                    <th>Max Kg</th>
                     <th>Advance %</th>
                     <th>Action</th>
                 </tr>

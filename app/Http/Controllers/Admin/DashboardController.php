@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\Subscription; // Subscription Plans के लिए
+use App\Models\Subscription; 
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +23,6 @@ class DashboardController extends Controller
             'total_products'        => Product::count(),
             
             // Subscription Stats
-            // FIX 1: Subscription model का उपयोग अब केवल PLANS (योजनाओं) की संख्या के लिए हो रहा है।
             'total_subscriptions'   => Subscription::count(), 
             
             // FIX 2: सक्रिय सब्सक्रिप्शन (Customer Subscriptions) के लिए 'SubscriptionOrder' मॉडल का उपयोग करें

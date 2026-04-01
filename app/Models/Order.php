@@ -44,12 +44,16 @@ class Order extends Model
         'razorpay_order_id',
         'razorpay_payment_id',
         'razorpay_signature',
+        'advance_amount',
+        'total_weight_kg',
     ];
 
     protected $casts = [
         'subtotal' => 'decimal:2',
         'delivery_charge' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'advance_amount' => 'decimal:2',
+        'total_weight_kg' => 'decimal:2',
         'delivery_date' => 'datetime',
         'delivered_at' => 'datetime',
         'cart_data' => 'array',    // automatically JSON decode/encode

@@ -120,15 +120,38 @@ class ProductController extends Controller
             'specialities' => 'nullable|boolean',
             'status' => 'nullable|boolean',
             'featured_type' => 'required|string',
-            'product_image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'product_image' => 'required_without:product_image_cropped|nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'product_image_cropped' => 'nullable|string',
+            'sub_images' => 'nullable|array',
+            'sub_images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'sub_images_cropped' => 'nullable|array',
+            'sub_images_cropped.*' => 'nullable|string',
         ]);
 
         try {
+            // Handle Main Product Image (Priority: Cropped > Raw File)
             $imagePath = null;
-            if ($request->hasFile('product_image')) {
+            if ($request->filled('product_image_cropped')) {
+                $imagePath = $this->uploadBase64Image($request->product_image_cropped, 'products', 'prod_');
+            } elseif ($request->hasFile('product_image')) {
                 $image = $request->file('product_image');
                 $imageName = 'prod_' . uniqid() . '.' . $image->getClientOriginalExtension();
                 $imagePath = $image->storeAs('products', $imageName, 'public');
+            }
+
+            // Handle Gallery Sub-Images (Priority: Cropped > Raw Files)
+            $subImagePaths = [];
+            if ($request->filled('sub_images_cropped') && is_array($request->sub_images_cropped)) {
+                foreach ($request->sub_images_cropped as $base64) {
+                    if ($base64) {
+                        $subImagePaths[] = $this->uploadBase64Image($base64, 'products/gallery', 'sub_');
+                    }
+                }
+            } elseif ($request->hasFile('sub_images')) {
+                foreach ($request->file('sub_images') as $subImage) {
+                    $subImageName = 'sub_' . uniqid() . '.' . $subImage->getClientOriginalExtension();
+                    $subImagePaths[] = $subImage->storeAs('products/gallery', $subImageName, 'public');
+                }
             }
 
             $product = Product::create([
@@ -150,6 +173,7 @@ class ProductController extends Controller
                 'specialities' => $request->has('specialities'),
                 'status' => $request->has('status'),
                 'featured_type' => $request->featured_type,
+                'sub_images' => $subImagePaths,
             ]);
 
             return redirect()->route('admin.products.index')
@@ -222,6 +246,9 @@ class ProductController extends Controller
             'specialities' => 'boolean',
             'status' => 'boolean',
             'featured_type' => 'nullable|string',
+            'sub_images' => 'nullable|array',
+            'sub_images.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'delete_sub_images' => 'nullable|array',
         ]);
 
         try {
@@ -231,31 +258,56 @@ class ProductController extends Controller
                 'name' => $request->name,
                 'slug' => Str::slug($request->name),
                 'description' => $request->description,
-                'quantity' => $request->quantity,
-                'unit' => $request->unit,
                 'types' => $request->type,
                 'price' => $request->price,
-                'discounted_price' => $request->discount_price,
-                'minimum_quantity' => $request->min_order,
+                'discount_price' => $request->discount_price,
+                'min_order' => $request->min_order,
                 'max_order' => $request->max_order,
+                'weight' => $request->weight,
+                'weight_type' => $request->weight_type,
                 'featured_type' => $request->featured_type,
                 'status' => $request->has('status'),
+                'best_seller' => $request->has('best_seller'),
+                'specialities' => $request->has('specialities'),
             ];
 
             // Image replacement
             if ($request->hasFile('product_image')) {
-                // Column name check: DB me jo column hai wahi use karo
-                $oldImage = $product->product_image; // Agar DB column 'product_image' hai
+                $oldImage = $product->product_image;
                 if ($oldImage && Storage::disk('public')->exists($oldImage)) {
                     Storage::disk('public')->delete($oldImage);
                 }
 
-                // Store new image
                 $image = $request->file('product_image');
                 $imageName = 'prod_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                $product->product_image = $image->storeAs('products', $imageName, 'public');
+                $data['product_image'] = $image->storeAs('products', $imageName, 'public');
             }
 
+            // Sub-images management
+            $currentSubImages = $product->sub_images ?? [];
+
+            // Handle deletions
+            if ($request->filled('delete_sub_images')) {
+                foreach ($request->delete_sub_images as $pathToDelete) {
+                    if (Storage::disk('public')->exists($pathToDelete)) {
+                        Storage::disk('public')->delete($pathToDelete);
+                    }
+                    $currentSubImages = array_filter($currentSubImages, function($path) use ($pathToDelete) {
+                        return $path !== $pathToDelete;
+                    });
+                }
+                $currentSubImages = array_values($currentSubImages);
+            }
+
+            // Handle new uploads
+            if ($request->hasFile('sub_images')) {
+                foreach ($request->file('sub_images') as $subFile) {
+                    $subName = 'sub_' . uniqid() . '.' . $subFile->getClientOriginalExtension();
+                    $currentSubImages[] = $subFile->storeAs('products/gallery', $subName, 'public');
+                }
+            }
+
+            $data['sub_images'] = $currentSubImages;
 
             // Update product
             $product->update($data);
@@ -280,6 +332,15 @@ class ProductController extends Controller
             // Delete image from storage if it exists
             if ($product->product_image && Storage::disk('public')->exists($product->product_image)) {
                 Storage::disk('public')->delete($product->product_image);
+            }
+
+            // Delete sub-images
+            if ($product->sub_images && is_array($product->sub_images)) {
+                foreach ($product->sub_images as $subPath) {
+                    if (Storage::disk('public')->exists($subPath)) {
+                        Storage::disk('public')->delete($subPath);
+                    }
+                }
             }
 
             // Delete product record
@@ -331,10 +392,31 @@ class ProductController extends Controller
         }
 
     }
-    public function websiteIndex()
+    /**
+     * Helper to save base64 image data to storage.
+     */
+    private function uploadBase64Image($base64Data, $directory, $prefix)
     {
-        return view('admin.banners.website.index');
+        if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $type)) {
+            $data = substr($base64Data, strpos($base64Data, ',') + 1);
+            $type = strtolower($type[1]); // jpg, png, gif, webp
+
+            if (!in_array($type, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                throw new \Exception('Invalid image type');
+            }
+
+            $data = base64_decode($data);
+            if ($data === false) {
+                throw new \Exception('Base64 decode failed');
+            }
+
+            $fileName = $prefix . uniqid() . '.' . $type;
+            $path = $directory . '/' . $fileName;
+
+            Storage::disk('public')->put($path, $data);
+            return $path;
+        }
+
+        throw new \Exception('Invalid base64 data format');
     }
-
-
 }

@@ -58,8 +58,6 @@ Route::prefix('v1')->group(function () {
     //     Route::get('get-current-user', [AuthController::class, 'getCurrentUser']);
     // });
 
-
-
     // Public product routes
     Route::prefix('products')->group(function () {
         Route::get('/', [ProductController::class, 'index']);
@@ -98,16 +96,16 @@ Route::prefix('v1')->group(function () {
 
     // Public testimonial routes
     Route::prefix('testimonials')->group(function () {
+        // ... (rest as before)
         Route::get('/', [TestimonialController::class, 'index']);
         Route::get('featured', [TestimonialController::class, 'featured']);
         Route::get('{id}', [TestimonialController::class, 'show']);
         Route::post('/', [TestimonialController::class, 'store']);
     });
     // Public advance payment routes
-    // Public advance payment routes
     Route::prefix('advance-payments')->group(function () {
-        Route::get('/', [AdvancePaymentController::class, 'index']);   // All advance payments
-        Route::get('{id}', [AdvancePaymentController::class, 'show']); // Single advance payment
+        Route::get('/', [AdvancePaymentController::class, 'index']);   
+        Route::get('{id}', [AdvancePaymentController::class, 'show']); 
     });
 
 
@@ -176,20 +174,6 @@ Route::prefix('v1')->group(function () {
         Route::get('{key}', [WebsiteSettingsController::class, 'show']);
     });
 
-    // Public policy routes
-    // Route::prefix('policies')->group(function () {
-    //     Route::get('/', [PolicyController::class, 'index']);
-    //     Route::get('types', [PolicyController::class, 'types']);
-    //     Route::get('terms', [PolicyController::class, 'terms']);
-    //     Route::get('privacy', [PolicyController::class, 'privacy']);
-    //     Route::get('refund', [PolicyController::class, 'refund']);
-    //     Route::get('return', [PolicyController::class, 'return']);
-    //     Route::get('disclaimer', [PolicyController::class, 'disclaimer']);
-    //     Route::get('shipping', [PolicyController::class, 'shipping']);
-    //     Route::get('cancellation', [PolicyController::class, 'cancellation']);
-    //     Route::get('{type}', [PolicyController::class, 'show']);
-    // });
-
     // Protected routes (authentication required)
     Route::middleware('auth:sanctum')->group(function () {
 
@@ -209,25 +193,12 @@ Route::prefix('v1')->group(function () {
             Route::delete('/', [CartController::class, 'clearCart']);
             Route::get('summary', [CartController::class, 'summary']);
             Route::post('select-item-box', [CartController::class, 'selectItemBox']);
+            Route::post('remove-item-box', [CartController::class, 'removeItemBox']);
         });
-
-        // Route::post('select-item-box', [CartController::class, 'selectItemBox']);
-
-        // Wishlist routes
-        // Route::prefix('wishlist')->group(function () {
-        //     Route::get('/', [WishlistController::class, 'index']);
-        //     Route::post('add', [WishlistController::class, 'addToWishlist']);
-        //     Route::delete('{id}', [WishlistController::class, 'removeFromWishlist']);
-        //     Route::delete('/', [WishlistController::class, 'clearWishlist']);
-        //     Route::get('check/{productId}', [WishlistController::class, 'checkWishlist']);
-        //     Route::get('summary', [WishlistController::class, 'summary']);
-        // });
 
 
         Route::get('offers', [OfferController::class, 'getOffers']);
-
         Route::post('createOffer', [OfferController::class, 'createOffer']);
-
         Route::post('offer/update/{id}', [OfferController::class, 'updateOffer']);
         Route::delete('offer/delete/{id}', [OfferController::class, 'deleteOffer']);
         Route::get('latest-offer', [OfferController::class, 'latestOffer']);
@@ -237,6 +208,7 @@ Route::prefix('v1')->group(function () {
         Route::prefix('orders')->group(function () {
             Route::get('/', [OrderController::class, 'index']);
             Route::post('/', [OrderController::class, 'store']);
+            Route::post('buy-now', [OrderController::class, 'buyNow']);
             Route::get('statistics', [OrderController::class, 'statistics']);
             Route::get('subscription-orders', [OrderController::class, 'subscriptionOrders']);
             Route::get('new-orders', [OrderController::class, 'newOrders']);
@@ -250,7 +222,6 @@ Route::prefix('v1')->group(function () {
         // Public payment routes
         Route::prefix(prefix: 'payments')->group(function () {
             Route::post('create', [PaymentController::class, 'pay']);
-
             Route::post('webhook', [PaymentController::class, 'webhook']);
         });
 
@@ -260,18 +231,8 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware('auth:sanctum')->prefix('payments')->group(function () {
             Route::get('/', [PaymentController::class, 'index']);
-
             Route::get('{id}', [PaymentController::class, 'show']);
         });
-
-        // address
-
-        // Route::middleware('auth:sanctum')->group(function () {
-        //     Route::get('/addresses', [AddressController::class, 'index']);   // GET
-        //     Route::post('/addresses', [AddressController::class, 'store']);  // POST
-        //     Route::put('/addresses/{id}', [AddressController::class, 'update']); // UPDATE
-        // });
-
 
         // Review routes (protected)
         Route::prefix('reviews')->group(function () {
@@ -290,23 +251,9 @@ Route::prefix('v1')->group(function () {
 });
 
 
-// Route::prefix('wishlist')->group(function () {
-// Route::middleware('auth:sanctum')->prefix('wishlist')->group(function () {
-//     Route::get('index', [WishlistController::class, 'index']);
-//     Route::post('add', [WishlistController::class, 'addToWishlist']);
-//     Route::delete('remove/{id}', [WishlistController::class, 'removeFromWishlist']);
-//     Route::delete('clear', [WishlistController::class, 'clearWishlist']);
-//     Route::get('check/{productId}', [WishlistController::class, 'checkWishlist']);
-//     Route::get('summary', [WishlistController::class, 'summary']);
-// });
-
-
 
 Route::get('get-wishlist', [WishlistController::class, 'getWishlist']);
-
-
 Route::post('add-wishlist', [WishlistController::class, 'addWishlist']);
-
 Route::post('delete-wishlist', [WishlistController::class, 'deleteWishlist']);
 
 
@@ -314,9 +261,7 @@ Route::post('delete-wishlist', [WishlistController::class, 'deleteWishlist']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('addresses', [AddressController::class, 'index']); // GET current user's addresses
-
     Route::post('addresses/store', [AddressController::class, 'store']);
-
     Route::put('update/addresses/{id}', [AddressController::class, 'update']);
 });
 

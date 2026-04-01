@@ -8,35 +8,43 @@ use Illuminate\Http\Request;
 class NotificationController extends Controller
 {
     // ✅ User ki sabhi notifications
-  public function getNotifications(Request $request)
-{
-    $user = $request->user();
+    public function getNotifications(Request $request)
+    {
+        $user = $request->user();
+        $notifications = $user->notifications()->orderBy('created_at', 'desc')->get();
 
-    return response()->json([
-        'status' => true,
-        'data'   => $user->notifications()->orderBy('created_at', 'desc')->get()
-    ]);
-}
+        $unreadCount = $user->unreadNotifications()->count();
+        $readCount = $notifications->count() - $unreadCount;
 
-public function markAsRead(Request $request, $id)
-{
-    $user = $request->user();
-    $notification = $user->notifications()->where('id', $id)->first();
-
-    if (!$notification) {
         return response()->json([
-            'status'  => false,
-            'message' => 'Notification not found'
-        ], 404);
+            'status' => true,
+            'data' => $notifications,
+            'unread_count' => $unreadCount,
+            'read_count' => $readCount,
+        ]);
     }
 
-    $notification->markAsRead();
+    public function markAsRead(Request $request, $id)
+    {
+        $user = $request->user();
+        $notification = $user->notifications()->where('id', $id)->first();
 
-    return response()->json([
-        'status'  => true,
-        'message' => 'Notification marked as read'
-    ]);
-}
+        if (!$notification) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Notification not found'
+            ], 404);
+        }
+
+        // ✅ Mark as read in Laravel and update custom is_read column
+        $notification->markAsRead();
+        $notification->update(['is_read' => true]);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Notification marked as read'
+        ]);
+    }
 
 public function unreadCount(Request $request)
 {

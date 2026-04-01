@@ -238,9 +238,9 @@ class ProductController extends Controller
 
             $products = Product::with(['category', 'subcategory'])
                 ->where('status', true)
-                ->where(function($q) use ($request) {
+                ->where(function ($q) use ($request) {
                     $q->where('name', 'like', '%' . $request->query . '%')
-                      ->orWhere('description', 'like', '%' . $request->query . '%');
+                        ->orWhere('description', 'like', '%' . $request->query . '%');
                 })
                 ->get();
 
@@ -358,7 +358,7 @@ class ProductController extends Controller
                 ));
             }
         } catch (\Exception $e) {
-            \Log::error('Product notification failed: '.$e->getMessage());
+            \Log::error('Product notification failed: ' . $e->getMessage());
         }
     }
 }
