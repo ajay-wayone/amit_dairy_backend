@@ -31,8 +31,7 @@ class AuthController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Validation errors',
-                    'errors' => $validator->errors(),
+                    'message' => $validator->errors()->first(),
                 ], 422);
             }
 
@@ -67,7 +66,7 @@ class AuthController extends Controller
                     'email' => $user->email,
                     'phone' => $user->phone,
                     'purpose' => $user->purpose,
-                    'otp' => $otp, // OTP comes in api
+                    'otp' => $otp,
                 ],
             ], 201);
 
@@ -588,6 +587,70 @@ class AuthController extends Controller
     }
 
 
+    /**
+     * Change Password API
+     */
+    public function changePassword(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
+
+            // Step 1: Validation
+            $validator = Validator::make($request->all(), [
+                'old_password' => 'required',
+                'new_password' => 'required|string|min:6|different:old_password',
+            ], [
+                'new_password.different' => 'Old and new password cannot be same.'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $validator->errors()->first(),
+                ], 422);
+            }
+
+            // Step 2: Check old password
+            if (!Hash::check($request->old_password, $user->password)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Incorrect old password',
+                ], 400);
+            }
+
+            // Step 3: Update to new password
+            $user->password = Hash::make($request->new_password);
+            $user->save();
+
+            // Send notification for password change
+            $user->notify(new UserNotification(
+                'Password Changed',
+                'Your account password has been changed successfully.',
+                ['user_id' => $user->id, 'type' => 'password_changed']
+            ));
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Password changed successfully',
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong!',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
     public function updateProfile(Request $request)
     {
         try {
@@ -641,7 +704,7 @@ class AuthController extends Controller
                 ->update($data);
 
             $updatedUser = DB::table('users')->where('id', $user->id)->first();
-            
+
             // Send and Save notification for Profile Update
             $user->notify(new UserNotification(
                 'Profile Updated',
@@ -664,10 +727,38 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * Delete Account API
+     */
+    public function deleteAccount(Request $request)
+    {
+        try {
+            $user = $request->user();
 
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
 
+            // Delete user's tokens
+            $user->tokens()->delete();
 
+            // Delete the user
+            $user->delete();
 
+            return response()->json([
+                'status' => true,
+                'message' => 'Account deleted successfully'
+            ], 200);
 
-
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong!',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

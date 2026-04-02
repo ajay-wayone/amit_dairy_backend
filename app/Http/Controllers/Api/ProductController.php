@@ -14,7 +14,7 @@ use App\Notifications\UserNotification;
 class ProductController extends Controller
 {
     /**
-     * Get all products (NO pagination)
+     * Get all products (with pagination)
      */
     public function index(Request $request)
     {
@@ -50,7 +50,7 @@ class ProductController extends Controller
                 $query->where('stock_quantity', '>', 0);
             }
 
-            if ($request->has('featured')) {
+            if ($request->has('featured') || $request->has('best_seller')) {
                 $query->where('best_seller', true);
             }
 
@@ -68,12 +68,21 @@ class ProductController extends Controller
 
             $query->orderBy($sortBy, $sortOrder);
 
-            $products = $query->get();
+            $perPage = $request->get('per_page', 10);
+            $products = $query->paginate($perPage);
 
             return response()->json([
                 'status' => true,
                 'message' => 'Products retrieved successfully',
-                'data' => $products
+                'data' => [
+                    'products' => $products->items(),
+                    'pagination' => [
+                        'current_page' => $products->currentPage(),
+                        'last_page' => $products->lastPage(),
+                        'per_page' => $products->perPage(),
+                        'total' => $products->total(),
+                    ]
+                ]
             ]);
 
         } catch (\Exception $e) {

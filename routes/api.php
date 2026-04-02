@@ -132,6 +132,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/', [NotificationController::class, 'getNotifications']);
         Route::post('{id}/read', [NotificationController::class, 'markAsRead']);
         Route::get('unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('read-all', [NotificationController::class, 'markAllAsRead']);
     });
     // Public contact routes
     Route::post('contact', [ContactController::class, 'store']);
@@ -181,6 +182,8 @@ Route::prefix('v1')->group(function () {
         Route::prefix('auth')->group(function () {
             Route::post('logout', [AuthController::class, 'logout']);
             Route::get('profile', [AuthController::class, 'profile']);
+            Route::delete('delete-account', [AuthController::class, 'deleteAccount']);
+            Route::post('change-password', [AuthController::class, 'changePassword']);
         });
 
 
@@ -194,6 +197,7 @@ Route::prefix('v1')->group(function () {
             Route::get('summary', [CartController::class, 'summary']);
             Route::post('select-item-box', [CartController::class, 'selectItemBox']);
             Route::post('remove-item-box', [CartController::class, 'removeItemBox']);
+            Route::post('apply-coupon', [CartController::class, 'applyCoupon']);
         });
 
 

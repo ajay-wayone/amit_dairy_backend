@@ -10,22 +10,11 @@ use Illuminate\Support\Facades\Validator;
 
 class OfferController extends Controller
 {
-    // ✅ Get All Offers
-    // public function getOffers()
-    // {
-    //     $offers = Offer::select('id', 'offer', 'created_at', 'updated_at')
-    //         ->orderBy('id', 'desc')
-    //         ->get();
 
-    //     return response()->json([
-    //         'status' => true,
-    //         'message' => 'Offers fetched successfully',
-    //         'data' => $offers
-    //     ], 200);
-    // }
     public function getOffers()
     {
-        $offers = Offer::select('id', 'offer', 'created_at', 'updated_at')
+        $offers = Offer::select('id', 'offer', 'coupon_code', 'discount_percentage', 'max_discount', 'status', 'created_at', 'updated_at')
+            ->where('status', 1)
             ->orderBy('id', 'desc')
             ->get();
 
@@ -43,11 +32,19 @@ class OfferController extends Controller
         // ✅ Validation
         $request->validate([
             'offer' => 'required|string|max:255',
+            'coupon_code' => 'required|string|max:50|unique:offers,coupon_code',
+            'discount_percentage' => 'required|numeric|min:0|max:100',
+            'max_discount' => 'required|numeric|min:0',
+            'status' => 'nullable|boolean',
         ]);
 
         // ✅ Insert Offer
         $offer = Offer::create([
             'offer' => $request->offer,
+            'coupon_code' => $request->coupon_code,
+            'discount_percentage' => $request->discount_percentage,
+            'max_discount' => $request->max_discount ?? 500,
+            'status' => $request->status ?? 1,
         ]);
 
         return response()->json([
@@ -94,7 +91,11 @@ class OfferController extends Controller
     {
         // ✅ Validation
         $validator = Validator::make($request->all(), [
-            'offer' => 'required|string|max:255'
+            'offer' => 'required|string|max:255',
+            'coupon_code' => "required|string|max:50|unique:offers,coupon_code,$id",
+            'discount_percentage' => 'required|numeric|min:0|max:100',
+            'max_discount' => 'required|numeric|min:0',
+            'status' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -116,7 +117,11 @@ class OfferController extends Controller
 
         // ✅ Update
         $offer->update([
-            'offer' => $request->offer
+            'offer' => $request->offer,
+            'coupon_code' => $request->coupon_code,
+            'discount_percentage' => $request->discount_percentage,
+            'max_discount' => $request->max_discount,
+            'status' => $request->status ?? $offer->status,
         ]);
 
         return response()->json([

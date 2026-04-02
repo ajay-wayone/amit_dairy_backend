@@ -37,7 +37,7 @@ class PolicyController extends Controller
     // Terms & Conditions (agar table hai)
     public function terms()
     {
-        $policy = DB::table('terms_conditions')->first();
+        $policy = DB::table('terms_and_conditions')->first();
 
         if (!$policy) {
             return response('Terms not found', 404);

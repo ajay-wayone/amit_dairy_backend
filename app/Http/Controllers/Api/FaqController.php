@@ -16,26 +16,28 @@ class FaqController extends Controller
         try {
             $query = Faq::where('is_active', true);
 
-            // Search by question or answer
-            if ($request->has('search')) {
-                $query->where(function($q) use ($request) {
-                    $q->where('question', 'like', '%' . $request->search . '%')
-                      ->orWhere('answer', 'like', '%' . $request->search . '%');
+            // 1. Search Logic - Use input() for safety
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('question', 'like', "%{$search}%")
+                        ->orWhere('answer', 'like', "%{$search}%");
                 });
             }
 
-            // Sort FAQs
+            // 2. Sorting Logic - Clearer naming and direction validation
             $sortBy = $request->get('sort_by', 'sort_order');
-            $sortOrder = $request->get('sort_order', 'asc');
-            
+            $direction = strtolower($request->get('sort_direction', 'asc')) === 'desc' ? 'desc' : 'asc';
+
             $allowedSortFields = ['question', 'sort_order', 'created_at'];
             if (!in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'sort_order';
             }
-            
-            $query->orderBy($sortBy, $sortOrder);
 
-            $perPage = $request->get('per_page', 20);
+            $query->orderBy($sortBy, $direction);
+
+            // 3. Pagination with sensible limits
+            $perPage = min($request->get('per_page', 20), 100); // Cap at 100 to prevent DOS
             $faqs = $query->paginate($perPage);
 
             return response()->json([
@@ -53,13 +55,15 @@ class FaqController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error("FAQ Index Error: " . $e->getMessage()); // Log the error for debugging
             return response()->json([
                 'status' => false,
-                'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
+                'message' => 'An error occurred while fetching FAQs.',
+                'error' => config('app.debug') ? $e->getMessage() : null, // Hide raw error in production
             ], 500);
         }
     }
+
 
     /**
      * Get featured FAQs
@@ -106,9 +110,9 @@ class FaqController extends Controller
             }
 
             $faqs = Faq::where('is_active', true)
-                ->where(function($q) use ($request) {
+                ->where(function ($q) use ($request) {
                     $q->where('question', 'like', '%' . $request->query . '%')
-                      ->orWhere('answer', 'like', '%' . $request->query . '%');
+                        ->orWhere('answer', 'like', '%' . $request->query . '%');
                 })
                 ->orderBy('sort_order', 'asc')
                 ->get();
@@ -162,4 +166,4 @@ class FaqController extends Controller
             ], 500);
         }
     }
-} 
+}

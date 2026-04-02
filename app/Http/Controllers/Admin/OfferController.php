@@ -37,17 +37,24 @@ class OfferController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
         $request->validate([
-            'offer' => 'required|string|max:255|unique:offers,offer',
+            'offer' => 'required|string|max:255',
+            'coupon_code' => 'required|string|max:50|unique:offers,coupon_code',
+            'discount_percentage' => 'required|numeric|min:0|max:100',
+            'max_discount' => 'required|numeric|min:0',
         ]);
 
         Offer::create([
             'offer' => $request->offer,
+            'coupon_code' => $request->coupon_code,
+            'discount_percentage' => $request->discount_percentage,
+            'max_discount' => $request->max_discount,
+            'status' => $request->has('status') ? 1 : 0,
         ]);
 
-        return back()->with('success', 'Offer added successfully!');
+        return back()->with('success', 'Coupon created successfully!');
     }
+
 
     /**
      * Update existing offer
@@ -55,15 +62,24 @@ class OfferController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'offer' => "required|string|max:255|unique:offers,offer,$id",
+            'offer' => 'required|string|max:255',
+            'coupon_code' => "required|string|max:50|unique:offers,coupon_code,$id",
+            'discount_percentage' => 'required|numeric|min:0|max:100',
+            'max_discount' => 'required|numeric|min:0',
         ]);
 
         $offer = Offer::findOrFail($id);
-        $offer->offer = $request->offer;
-        $offer->save();
+        $offer->update([
+            'offer' => $request->offer,
+            'coupon_code' => $request->coupon_code,
+            'discount_percentage' => $request->discount_percentage,
+            'max_discount' => $request->max_discount,
+            'status' => $request->has('status') ? 1 : 0,
+        ]);
 
-        return back()->with('success', 'Offer updated successfully!');
+        return back()->with('success', 'Coupon updated successfully!');
     }
+
 
     /**
      * Delete offer

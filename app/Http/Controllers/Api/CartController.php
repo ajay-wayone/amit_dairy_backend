@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Offer;
+use App\Models\CouponUsage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\UserNotification;
@@ -15,42 +17,6 @@ class CartController extends Controller
     /**
      * Get user's cart items
      */
-    // public function index(Request $request)
-    // {
-    //     try {
-    //         $user = $request->user();
-
-    //         $cartItems = Cart::with(['product:id,name,price,product_image,description'])
-    //             ->where('user_id', $user->id)
-    //             ->where('is_active', true)
-    //             ->get();
-
-    //         $totalItems = $cartItems->sum('quantity');
-    //         $totalAmount = $cartItems->sum('total_price');
-
-    //         return response()->json([
-    //             'status' => true,
-    //             'message' => 'Cart items retrieved successfully',
-    //             'data' => [
-    //                 'items' => $cartItems,
-    //                 'total_items' => $totalItems,
-    //                 'total_amount' => number_format($totalAmount, 2),
-    //                 'item_count' => $cartItems->count()
-    //             ]
-    //         ]);
-
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Something went wrong!',
-    //             'error' => $e->getMessage(),
-    //         ], 500);
-    //     }
-    // }
-
-
-
-
     public function index(Request $request)
     {
         try {
@@ -72,7 +38,7 @@ class CartController extends Controller
 
             // total box amount (per item box)
             $boxAmount = $cartItems->sum(function ($item) {
-                return $item->box ? $item->box->box_price : 0;
+                return $item->box ? ($item->box->box_price * ($item->box_qty ?? 1)) : 0;
             });
 
             // final amount
@@ -319,23 +285,54 @@ class CartController extends Controller
         try {
             $user = $request->user();
 
-            $cartItems = Cart::with(['product:id,name,price,product_image'])
+            $cartItems = Cart::with(['product:id,name,price,product_image', 'box:id,box_price'])
                 ->where('user_id', $user->id)
                 ->where('is_active', true)
                 ->get();
 
             $totalItems = $cartItems->sum('quantity');
-            $totalAmount = $cartItems->sum('total_price');
+            $cartAmount = $cartItems->sum('total_price');
+            $boxAmount = $cartItems->sum(function ($item) {
+                return $item->box ? ($item->box->box_price * ($item->box_qty ?? 1)) : 0;
+            });
+
+            $totalAmount = $cartAmount + $boxAmount;
             $itemCount = $cartItems->count();
+
+            // Check if coupon is provided
+            $discountAmount = 0;
+            $couponCode = $request->coupon_code;
+            $appliedCoupon = null;
+
+            if ($couponCode) {
+                $offer = Offer::where('coupon_code', $couponCode)->where('status', 1)->first();
+                if ($offer) {
+                    $discountAmount = ($totalAmount * $offer->discount_percentage) / 100;
+                    if ($discountAmount > $offer->max_discount) {
+                        $discountAmount = $offer->max_discount;
+                    }
+                    $appliedCoupon = [
+                        'id' => $offer->id,
+                        'code' => $offer->coupon_code,
+                        'discount_percentage' => (float)$offer->discount_percentage,
+                        'discount_amount' => round($discountAmount, 2)
+                    ];
+                }
+            }
 
             return response()->json([
                 'status' => true,
                 'message' => 'Cart summary retrieved successfully',
                 'data' => [
                     'total_items' => $totalItems,
-                    'total_amount' => number_format($totalAmount, 2),
+                    'cart_amount' => number_format($cartAmount, 2),
+                    'box_amount' => number_format($boxAmount, 2),
+                    'subtotal' => number_format($totalAmount, 2),
+                    'discount_amount' => number_format($discountAmount, 2),
+                    'total_amount' => number_format($totalAmount - $discountAmount, 2),
                     'item_count' => $itemCount,
-                    'has_items' => $itemCount > 0
+                    'has_items' => $itemCount > 0,
+                    'applied_coupon' => $appliedCoupon
                 ]
             ]);
 
@@ -347,8 +344,6 @@ class CartController extends Controller
             ], 500);
         }
     }
-
-
 
 
     public function selectItemBox(Request $request)
@@ -397,6 +392,95 @@ class CartController extends Controller
             'status' => true,
             'message' => 'Box removed from cart item'
         ]);
+    }
+
+    /**
+     * Apply coupon to cart
+     */
+    public function applyCoupon(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'coupon_code' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $user = $request->user();
+            $offer = Offer::where('coupon_code', $request->coupon_code)
+                ->where('status', 1)
+                ->first();
+
+            if (!$offer) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid or inactive coupon code',
+                ], 404);
+            }
+
+            // Check if user already used this coupon
+            $usageCount = CouponUsage::where('user_id', $user->id)
+                ->where('offer_id', $offer->id)
+                ->count();
+
+            if ($usageCount > 0) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You have already used this coupon.',
+                ], 400);
+            }
+
+            // Calculate current total
+            $cartItems = Cart::with(['box:id,box_price'])
+                ->where('user_id', $user->id)
+                ->where('is_active', true)
+                ->get();
+
+            if ($cartItems->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Your cart is empty',
+                ], 400);
+            }
+
+            $cartAmount = $cartItems->sum('total_price');
+            $boxAmount = $cartItems->sum(function ($item) {
+                return $item->box ? ($item->box->box_price * ($item->box_qty ?? 1)) : 0;
+            });
+            $subtotal = $cartAmount + $boxAmount;
+
+            $discountAmount = ($subtotal * $offer->discount_percentage) / 100;
+            if ($discountAmount > $offer->max_discount) {
+                $discountAmount = (float)$offer->max_discount;
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Coupon applied successfully',
+                'data' => [
+                    'coupon_id' => $offer->id,
+                    'coupon_code' => $offer->coupon_code,
+                    'discount_percentage' => (float)$offer->discount_percentage,
+                    'discount_amount' => round($discountAmount, 2),
+                    'max_discount' => (float)$offer->max_discount,
+                    'subtotal' => round($subtotal, 2),
+                    'payable_amount' => round($subtotal - $discountAmount, 2)
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong!',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
 }

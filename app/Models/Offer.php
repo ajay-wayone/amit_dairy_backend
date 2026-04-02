@@ -12,6 +12,10 @@ class Offer extends Model
     protected $table = 'offers';
 
     protected $fillable = [
-        'offer'
+        'offer',
+        'coupon_code',
+        'discount_percentage',
+        'max_discount',
+        'status',
     ];
 }

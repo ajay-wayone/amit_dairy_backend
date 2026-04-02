@@ -38,7 +38,7 @@ class CategoryController extends Controller
             }
 
             $query->orderBy($sortBy, $sortOrder);
-            $perPage = $request->get('per_page', 20);
+            $perPage = $request->get('per_page', 10);
             $categories = $query->paginate($perPage);
 
             return response()->json([

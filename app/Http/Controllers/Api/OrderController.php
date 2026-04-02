@@ -11,6 +11,8 @@ use App\Models\Product;
 use App\Models\PaymentSlab;
 use App\Models\Box;
 use App\Models\User;
+use App\Models\Offer;
+use App\Models\CouponUsage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -109,6 +111,7 @@ class OrderController extends Controller
             'box_id' => 'nullable|exists:boxes,id',
             'box_qty' => 'nullable|integer|min:1',
             'custom_text' => 'nullable|string',
+            'coupon_code' => 'nullable|string|exists:offers,coupon_code',
         ]);
 
         if ($validator->fails()) {
@@ -176,6 +179,25 @@ class OrderController extends Controller
         $delivery_charge = $request->delivery_charge ?? 0;
         $total_amount = $itemTotal + $delivery_charge;
         
+        // 🎫 Coupon Logic
+        $discountAmount = 0;
+        $couponId = null;
+        if ($request->coupon_code) {
+            $offer = Offer::where('coupon_code', $request->coupon_code)->where('status', 1)->first();
+            if ($offer) {
+                // Check usage
+                $usageCheck = CouponUsage::where('user_id', $user->id)->where('offer_id', $offer->id)->count();
+                if ($usageCheck == 0) {
+                    $discountAmount = ($total_amount * $offer->discount_percentage) / 100;
+                    if ($discountAmount > $offer->max_discount) {
+                        $discountAmount = $offer->max_discount;
+                    }
+                    $couponId = $offer->id;
+                    $total_amount -= $discountAmount;
+                }
+            }
+        }
+
         $advance_amount = ($total_amount * $advancePercentage) / 100;
 
         DB::beginTransaction();
@@ -224,7 +246,9 @@ class OrderController extends Controller
                 'delivery_city' => $request->delivery_city ?? '',
                 'delivery_state' => $request->delivery_state ?? '',
                 'delivery_pincode' => $request->delivery_pincode ?? '',
+                'coupon_id' => $couponId,
                 'subtotal' => $subtotal,
+                'discount_amount' => $discountAmount,
                 'delivery_charge' => $delivery_charge,
                 'total_amount' => $total_amount,
                 'advance_amount' => $advance_amount,
@@ -249,6 +273,15 @@ class OrderController extends Controller
                 'razorpay_payment_id' => $request->razorpay_payment_id ?? '',
                 'razorpay_signature' => $request->razorpay_signature ?? '',
             ]);
+
+            // Save coupon usage
+            if ($couponId) {
+                CouponUsage::create([
+                    'user_id' => $user->id,
+                    'offer_id' => $couponId,
+                    'order_id' => $order->id,
+                ]);
+            }
 
             // Save order item
             OrderItem::create([
@@ -336,6 +369,7 @@ class OrderController extends Controller
             'longitude' => 'nullable|string',
             'razorpay_payment_id' => 'nullable|string',
             'razorpay_signature' => 'nullable|string',
+            'coupon_code' => 'nullable|string|exists:offers,coupon_code',
         ]);
 
         if ($validator->fails()) {
@@ -417,6 +451,25 @@ class OrderController extends Controller
             $delivery_charge = $request->delivery_charge ?? 0;
             $total_amount = $subtotal + $delivery_charge;
 
+            // 🎫 Coupon Logic
+            $discountAmount = 0;
+            $couponId = null;
+            if ($request->coupon_code) {
+                $offer = Offer::where('coupon_code', $request->coupon_code)->where('status', 1)->first();
+                if ($offer) {
+                    // Check usage
+                    $usageCheck = CouponUsage::where('user_id', $user->id)->where('offer_id', $offer->id)->count();
+                    if ($usageCheck == 0) {
+                        $discountAmount = ($total_amount * $offer->discount_percentage) / 100;
+                        if ($discountAmount > $offer->max_discount) {
+                            $discountAmount = $offer->max_discount;
+                        }
+                        $couponId = $offer->id;
+                        $total_amount -= $discountAmount;
+                    }
+                }
+            }
+
             // 🟡 Apply Slab Charging Logic (Universal)
             $advancePercentage = 100; // Default
             $slab = PaymentSlab::where('min_km', '<=', $totalWeightKg)
@@ -460,7 +513,9 @@ class OrderController extends Controller
                 'delivery_city' => $request->delivery_city ?? '',
                 'delivery_state' => $request->delivery_state ?? '',
                 'delivery_pincode' => $request->delivery_pincode ?? '',
+                'coupon_id' => $couponId,
                 'subtotal' => $subtotal,
+                'discount_amount' => $discountAmount,
                 'delivery_charge' => $delivery_charge,
                 'total_amount' => $total_amount,
                 'advance_amount' => $advance_amount,
@@ -485,6 +540,15 @@ class OrderController extends Controller
                 'razorpay_payment_id' => $request->razorpay_payment_id ?? '',
                 'razorpay_signature' => $request->razorpay_signature ?? '',
             ]);
+
+            // Save coupon usage
+            if ($couponId) {
+                CouponUsage::create([
+                    'user_id' => $user->id,
+                    'offer_id' => $couponId,
+                    'order_id' => $order->id,
+                ]);
+            }
 
             foreach ($cartDataWithImages as $item) {
                 OrderItem::create([

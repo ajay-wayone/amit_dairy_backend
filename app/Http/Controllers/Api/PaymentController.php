@@ -9,6 +9,7 @@ use Stripe\Charge;
 use Stripe\Webhook;
 use App\Models\Payment;
 use App\Models\order;
+use App\Models\Cart;
 
 use Razorpay\Api\Api;
 use App\Services\GatewayService;
@@ -176,6 +177,11 @@ class PaymentController extends Controller
                 'payment_status' => 'paid',
                 'order_status'   => 'confirmed',
             ]);
+
+            // ✅ Step 5: Empty the cart
+            Cart::where('user_id', $order->user_id)
+                ->where('is_active', true)
+                ->update(['is_active' => false]);
 
             return response()->json([
                 'success' => true,

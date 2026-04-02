@@ -31,17 +31,42 @@
             @csrf
 
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">Offer Name</label>
                         <input type="text" name="offer" class="form-control"
-                               placeholder="Enter Offer (Ex: 30% OFF)"
-                               value="{{ old('offer') }}">
+                               placeholder="Enter Offer (Ex: Summer Sale)"
+                               value="{{ old('offer') }}" required>
                     </div>
-
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Coupon Code</label>
+                        <input type="text" name="coupon_code" class="form-control"
+                               placeholder="Enter Coupon Code (Ex: SUMMER30)"
+                               value="{{ old('coupon_code') }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Discount Percentage (%)</label>
+                        <input type="number" name="discount_percentage" class="form-control"
+                               placeholder="Enter Percentage (0-100)"
+                               value="{{ old('discount_percentage') }}" required min="0" max="100" step="0.01">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Max Discount (₹)</label>
+                        <input type="number" name="max_discount" class="form-control"
+                               placeholder="Enter Max Discount"
+                               value="{{ old('max_discount', 500) }}" required min="0">
+                    </div>
+                </div>
+                <div class="col-md-12">
                     <div class="mb-3">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" name="is_active" value="1">
+                            <input class="form-check-input" type="checkbox" name="status" value="1" checked>
                             <label class="form-check-label">Active Status</label>
                         </div>
                     </div>
@@ -67,6 +92,10 @@
                 <tr>
                     <th>Sr No.</th>
                     <th>Offer Name</th>
+                    <th>Coupon Code</th>
+                    <th>Discount</th>
+                    <th>Max Disc.</th>
+                    <th>Status</th>
                     <th>Created At</th>
                     <th>Actions</th>
                 </tr>
@@ -77,6 +106,14 @@
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $offer->offer }}</td>
+                    <td><code>{{ $offer->coupon_code }}</code></td>
+                    <td>{{ (float)$offer->discount_percentage }}%</td>
+                    <td>₹{{ number_format($offer->max_discount, 2) }}</td>
+                    <td>
+                        <span class="badge {{ $offer->status ? 'bg-success' : 'bg-danger' }}">
+                            {{ $offer->status ? 'Active' : 'Inactive' }}
+                        </span>
+                    </td>
                     <td>{{ $offer->created_at->format('d M Y') }}</td>
                     <td>
                         <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
@@ -107,8 +144,38 @@
                                 </div>
 
                                 <div class="modal-body">
-                                    <input type="text" name="offer" class="form-control"
-                                           value="{{ $offer->offer }}" required>
+                                    <div class="mb-3">
+                                        <label class="form-label">Offer Name</label>
+                                        <input type="text" name="offer" class="form-control"
+                                               value="{{ $offer->offer }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Coupon Code</label>
+                                        <input type="text" name="coupon_code" class="form-control"
+                                               value="{{ $offer->coupon_code }}" required>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Discount (%)</label>
+                                                <input type="number" name="discount_percentage" class="form-control"
+                                                       value="{{ (float)$offer->discount_percentage }}" required min="0" max="100" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Max Discount (₹)</label>
+                                                <input type="number" name="max_discount" class="form-control"
+                                                       value="{{ $offer->max_discount }}" required min="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" name="status" value="1" {{ $offer->status ? 'checked' : '' }}>
+                                            <label class="form-check-label">Active Status</label>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="modal-footer">

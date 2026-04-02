@@ -19,7 +19,7 @@ class ContactController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'email' => 'required|email|max:255',
+                'email' => 'nullable|email|max:255',
                 'phone' => 'required|string|max:20',
                 'subject' => 'required|string|max:255',
                 'message' => 'required|string|min:10',
@@ -28,8 +28,8 @@ class ContactController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
+                    'message' => $validator->errors()->first(),
+                    // 'errors' => $validator->errors(),
                 ], 422);
             }
 
@@ -73,7 +73,7 @@ class ContactController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             $query = ContactEnquiry::where('email', $user->email);
 
             if ($request->has('status')) {
@@ -82,12 +82,12 @@ class ContactController extends Controller
 
             $sortBy = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
-            
+
             $allowedSortFields = ['subject', 'status', 'created_at'];
             if (!in_array($sortBy, $allowedSortFields)) {
                 $sortBy = 'created_at';
             }
-            
+
             $query->orderBy($sortBy, $sortOrder);
 
             $perPage = $request->get('per_page', 10);
@@ -123,7 +123,7 @@ class ContactController extends Controller
     {
         try {
             $user = $request->user();
-            
+
             $enquiry = ContactEnquiry::where('id', $id)
                 ->where('email', $user->email)
                 ->first();
@@ -167,7 +167,7 @@ class ContactController extends Controller
             }
 
         } catch (\Exception $e) {
-            \Log::error('Contact notification failed: '.$e->getMessage());
+            \Log::error('Contact notification failed: ' . $e->getMessage());
         }
     }
 }
